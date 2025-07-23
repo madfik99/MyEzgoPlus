@@ -1,0 +1,126 @@
+@extends('layouts.main')
+
+@section('page-title')
+    {{ __('Reservation Counter') }}
+@endsection
+
+@section('page-breadcrumb')
+    {{ __('Reservation Counter') }}
+@endsection
+
+@push('css')
+    @include('layouts.includes.datatable-css')
+@endpush
+
+@section('content')
+<div class="card p-4">
+    {{-- Agreement Details Panel --}}
+    <div class="x_panel">
+        <div class="x_title">
+            <h2>Agreement Details</h2>
+            <div class="clearfix"></div>
+        </div>
+        <div class="x_content">
+            <div class="form-horizontal form-label-left">
+
+                {{-- Agent --}}
+                <input type="hidden" name="agent_code" value="{{ $agent_code }}">
+                <input type="hidden" name="AgentName" value="{{ $AgentName }}">
+                
+
+                {{-- MIN Rental Time --}}
+                <div class="form-group d-flex justify-content-center align-items-center mb-3 mt-3">
+                    <label class="me-2 mb-0">Minimum Rental Time:</label>
+                    <input type="text" class="form-control bg-light text-center" 
+                        value="{{ $min_rental_time }}" 
+                        style="max-width: 400px;" disabled>
+                </div>
+
+
+                {{-- NRIC --}}
+                {{-- <div class="form-group">
+                    <label class="control-label col-md-4 col-sm-4 col-xs-12">NRIC</label>
+                    <div class="col-md-6 col-sm-6 col-xs-12">
+                        <input type="text" class="form-control bg-light" value="{{ $customer->nric_no ?? $nric }}" disabled>
+                    </div>
+                </div> --}}
+
+                {{-- Customer Full Name --}}
+                {{-- @if ($customer)
+                <div class="form-group">
+                    <label class="control-label col-md-4 col-sm-4 col-xs-12">Full Name</label>
+                    <div class="col-md-6 col-sm-6 col-xs-12">
+                        <input type="text" class="form-control bg-light" value="{{ $customer->firstname . ' ' . $customer->lastname }}" disabled>
+                    </div>
+                </div>
+                @endif --}}
+
+                {{-- Pickup & Return DateTime (Centered Layout) --}}
+                <div class="d-flex flex-column align-items-center my-4">
+                    
+                    {{-- Pickup Date & Time --}}
+                    <div class="d-flex align-items-center mb-2">
+                        <label class="me-2 mb-0 fw-bold">Pickup Date & Time:</label>
+                        <input type="text" class="form-control me-2 text-center" value="{{ $search_pickup_date }}" disabled style="max-width: 150px;">
+                        <input type="text" class="form-control text-center" value="{{ $search_pickup_time }}" disabled style="max-width: 120px;">
+                    </div>
+
+                    {{-- Return Date & Time --}}
+                    <div class="d-flex align-items-center">
+                        <label class="me-2 mb-0 fw-bold">Return Date & Time:</label>
+                        <input type="text" class="form-control me-2 text-center" value="{{ $search_return_date }}" disabled style="max-width: 150px;">
+                        <input type="text" class="form-control text-center" value="{{ $search_return_time }}" disabled style="max-width: 120px;">
+                    </div>
+
+                </div>
+
+
+                {{-- Vehicle Details --}}
+                {{-- @if ($vehicle)
+                <div class="form-group">
+                    <label class="control-label col-md-4 col-sm-4 col-xs-12">Vehicle</label>
+                    <div class="col-md-6 col-sm-6 col-xs-12">
+                        <input type="text" class="form-control bg-light" value="{{ $vehicle->make }} {{ $vehicle->model }} ({{ $vehicle->reg_no }})" disabled>
+                    </div>
+                </div>
+
+                {{-- Vehicle Class 
+                <div class="form-group">
+                    <label class="control-label col-md-4 col-sm-4 col-xs-12">Vehicle Class</label>
+                    <div class="col-md-6 col-sm-6 col-xs-12">
+                        <input type="text" class="form-control bg-light" value="{{ $vehicle->class->class_name ?? 'N/A' }}" disabled>
+                    </div>
+                </div>
+                @endif --}}
+
+                {{-- KLIA Option --}}
+                {{-- <div class="form-group">
+                    <label class="control-label col-md-4 col-sm-4 col-xs-12">KLIA Option</label>
+                    <div class="col-md-6 col-sm-6 col-xs-12">
+                        <input type="text" class="form-control bg-light" value="{{ $klia ?? '' }}" disabled>
+                    </div>
+                </div> --}}
+
+                {{-- Delivery Option --}}
+                {{-- <div class="form-group">
+                    <label class="control-label col-md-4 col-sm-4 col-xs-12">Delivery Term</label>
+                    <div class="col-md-6 col-sm-6 col-xs-12">
+                        <input type="text" class="form-control bg-light" value="{{ $opt ?? '' }}" disabled>
+                    </div>
+                </div> --}}
+
+                <div class="form-group">
+                    <center>
+                        <a href="{{ route('reservation.index') }}" class="btn btn-secondary">Return</a>
+                    </center>
+                </div>
+            </div>
+            <div class="ln_solid"></div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+    @include('layouts.includes.datatable-js')
+@endpush
