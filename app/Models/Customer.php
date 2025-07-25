@@ -35,5 +35,11 @@ class Customer extends Model
     {
         return $this->hasMany(UploadData::class,'customer_id');
     }
+
+    public function nricSelfieImage()
+    {
+        return $this->hasOne(UploadData::class, 'customer_id')->where('no', 1);
+    }
+
     
 }

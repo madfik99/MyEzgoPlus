@@ -37,10 +37,11 @@
             class="btn btn-secondary"
             type="button"
             data-bs-toggle="modal"
-            data-bs-target=".bs-pickup-modal-lg"
+            data-bs-target="#pickupModal"
             @if (empty($license_no) || ($license_exp ?? '') < $currentDate || $customer_status !== 'A') disabled @endif>
             <i class="fa fa-external-link">&nbsp;</i>Pickup
         </button>
+
 
         {{-- Pre-inspection Button --}}
         <button 
@@ -834,7 +835,7 @@
 <div class="card mb-4 shadow-sm">
     <div class="card-header">
         <h5 class="mb-0">Car Condition Pic</h5>
-        <b><small class="text-muted">Remark: | = Scratch &nbsp;&nbsp; O = Broken &nbsp;&nbsp; △ = Dent &nbsp;&nbsp; □ = Missing</small></b>
+        <b><a class="text-muted">Remark: | = Scratch &nbsp;&nbsp; O = Broken &nbsp;&nbsp; △ = Dent &nbsp;&nbsp; □ = Missing</a></b>
     </div>
     <div class="card-body pb-2">
         <div class="table-responsive">
@@ -1103,6 +1104,47 @@
 
 
 {{-- !!MODEL SECTION!! --}}
+
+
+{{--Pickup Modal--}}
+
+<div class="modal fade" id="pickupModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h4 class="modal-title" id="myModalLabel2">Pickup</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                
+            </div>
+
+            <div class="modal-body">
+                <form method="GET" action="{{ route('agreement.condition') }}" class="form-horizontal form-label-left">
+                    <div class="form-group row">
+                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="language">Choose Language</label>
+                        <div class="col-md-6 col-sm-6 col-xs-12">
+                            <select name="language" class="form-control" required>
+                                <option value="">-- Please select --</option>
+                                <option value="english" {{ (old('language', $language ?? '') == 'english') ? 'selected' : '' }}>English</option>
+                                <option value="malay" {{ (old('language', $language ?? '') == 'malay') ? 'selected' : '' }}>Malay</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <input type="hidden" name="booking_id" value="{{ $booking->id }}">
+                        <input type="hidden" name="step" value="1">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Next</button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
 
 {{-- Receipt Modal --}}
 <div id="receiptModal" class="modal fade" tabindex="-1" role="dialog">

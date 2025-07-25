@@ -39,6 +39,8 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\AgreementController;
 use App\Http\Controllers\BookingReceiptController;
+use App\Http\Controllers\AgreementConditionController;
+use App\Http\Controllers\PickupController;
 
 /*
 |--------------------------------------------------------------------------
@@ -69,6 +71,8 @@ Route::middleware('domain-check')->group(function () {
     Route::get('pricing/plans', [HomeController::class, 'PricingPlans'])->name('apps.pricing.plan');
     Route::get('pages', [HomeController::class, 'CustomPage'])->name('custompage');
     Route::get('/', [HomeController::class, 'index'])->name('start');
+
+    
 });
 Route::middleware(['auth', 'verified'])->group(function () {
 
@@ -112,6 +116,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     Route::get('/booking_receipt/{id}', [BookingReceiptController::class, 'generateReceipt'])->name('booking_receipt.generate');
 
+    Route::get('/agreementcondition', [AgreementConditionController::class, 'showInspectionForm'])->name('agreement.condition');
+    
+    Route::get('otp_request', [AgreementConditionController::class, 'requestOtp'])->name('otp.request');
+
+    Route::post('agreement/{booking_id}/verify-otp', [AgreementConditionController::class, 'verifyOtp'])->name('agreement.verifyOtp');
+
+    Route::post('/agreement-condition/{booking_id}/verify-otp', [AgreementConditionController::class, 'verifyOtp'])
+        ->name('agreement.verifyOtp');
+
+    Route::get('/pickup/vehicle/{booking_id}', [PickupController::class, 'show'])->name('pickup.vehicle');
+
+    // Route::get('/pickup-validate/{booking_id}', [PickupController::class, 'validatePickup'])
+    //     ->name('pickup.validate');
+
+    
+    
     // settings
     Route::resource('settings', SettingsController::class);
     Route::post('settings-save', [CompanySettingsController::class, 'store'])->name('settings.save');

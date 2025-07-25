@@ -82,4 +82,15 @@ class Vehicle extends Model
     {
         return $this->hasMany(Sale::class, 'vehicle_id');
     }
+
+    /**
+     * Add computed attributes
+     */
+    protected $appends = ['car_name'];
+
+    // Computed car_name attribute
+    public function getCarNameAttribute()
+    {
+        return "{$this->make} {$this->model}";
+    }
 }
