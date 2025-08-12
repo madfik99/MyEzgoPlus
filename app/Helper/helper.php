@@ -1790,4 +1790,15 @@ if (!function_exists('getAiModelName')) {
             ],
         ];
     }
+
+    function getLayoutRegionFromLabel($label)
+    {
+        $label = strtolower($label);
+        if (str_contains($label, 'front')) return 'front';
+        if (str_contains($label, 'left')) return 'left';
+        if (str_contains($label, 'right')) return 'right';
+        if (str_contains($label, 'rear') || str_contains($label, 'back')) return 'rear';
+        return 'front'; // fallback
+    }
+
 }

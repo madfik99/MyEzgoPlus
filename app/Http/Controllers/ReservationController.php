@@ -1356,27 +1356,26 @@ public function ReservationView($booking_id)
     ->where('position', 'pickup_interior')
     ->where('file_size', '!=', 0)
     ->orderByDesc('id')
-    ->pluck('file_name');
+    ->get(['file_name','no']);
 
     $returnInteriorImages = UploadData::where('booking_trans_id', $booking_id)
         ->where('position', 'return_interior')
         ->where('file_size', '!=', 0)
         ->orderByDesc('id')
-        ->pluck('file_name');
+        ->get(['file_name','no']);
 
     
     $pickupExteriorImages = UploadData::where('booking_trans_id', $booking_id)
     ->where('position', 'pickup_exterior')
     ->where('file_size', '!=', 0)
     ->orderByDesc('id')
-    ->pluck('file_name');
+    ->get(['file_name','no']);
 
     $returnExteriorImages = UploadData::where('booking_trans_id', $booking_id)
         ->where('position', 'return_exterior')
         ->where('file_size', '!=', 0)
         ->orderByDesc('id')
-        ->pluck('file_name');
-
+        ->get(['file_name','no']);
 
     $extends = Extend::where('extend_type', 'manual')
     ->where('booking_trans_id', $booking_id)

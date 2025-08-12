@@ -14,6 +14,8 @@ class UploadData extends Model
         'position',
         'no',
         'sequence',
+        'label',
+        'remarks',
         'customer_id',
         'booking_trans_id',
         'file_name',

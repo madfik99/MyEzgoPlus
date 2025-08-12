@@ -126,11 +126,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('agreement.verifyOtp');
 
     Route::get('/pickup/vehicle/{booking_id}', [PickupController::class, 'show'])->name('pickup.vehicle');
+    Route::post('/pickup/{booking_id}', [PickupController::class, 'updatePickup'])->name('pickup.update');
+
+
+    Route::get('/pickup/{id}/damage', [PickupController::class, 'showDamage'])->name('pickup.damage');
+    
+    Route::get('/return/{id}/damage', [PickupController::class, 'showDamage'])->name('return.damage');
 
     // Route::get('/pickup-validate/{booking_id}', [PickupController::class, 'validatePickup'])
     //     ->name('pickup.validate');
 
-    
+    Route::get('/phpinfo', function () {
+        phpinfo();
+    });
     
     // settings
     Route::resource('settings', SettingsController::class);

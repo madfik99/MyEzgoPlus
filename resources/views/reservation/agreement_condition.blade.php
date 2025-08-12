@@ -107,7 +107,7 @@
                         'malay' => 'Hanya penyewa dan pemandu tambahan dibenarkan memandu kenderaan ini.'
                     ],
                     [
-                        'english' => 'Obey traffic regulations and avoid criminal activities.',
+                        'english' => 'Obey traffic regulation in Malaysia and any criminal activity or wrongdoing is not allowed.',
                         'malay' => 'Patuhi peraturan jalanraya di Malaysia dan sebarang kegiatan jenayah atau salah adalah tidak dibenarkan.'
                     ],
                     [
@@ -115,35 +115,35 @@
                         'malay' => 'Sewaan untuk pihak ketiga adalah tidak dibenarkan.'
                     ],
                     [
-                        'english' => 'For extension, renter must notify and pay before extending.',
+                        'english' => 'For extend, renter must notify company and pay first before extend time.',
                         'malay' => 'Untuk pelanjutan sewaan, anda mesti memaklumkan kepada syarikat dan pembayaran haruslah dibuat terlebih dahulu sebelum masa lanjutan.'
                     ],
                     [
-                        'english' => 'No refundable payment for early return, collateral required if payment fails.',
+                        'english' => 'No refundable payment for early return and renter need to provide collateral item if fail to make payment.',
                         'malay' => 'Bayaran tidak dikembalikan untuk pulangan awal & jika tidak dapat melunaskan bayaran, penyewa perlu memberi barang cagaran.'
                     ],
                     [
-                        'english' => 'No alcohol, drug usage, or pets inside the rental vehicle.',
+                        'english' => 'No alcohol or drug usage or carrying pet inside car rental during rental period.',
                         'malay' => 'Penggunaan alkohol/dadah atau membawa haiwan peliharaan semasa sewaan adalah tidak dibenarkan.'
                     ],
                     [
-                        'english' => 'In case of accident, immediately report to the company.',
+                        'english' => 'First action when accident is direct reported to company immediately.',
                         'malay' => 'Jika kemalangan, segera laporkan kepada pihak syarikat.'
                     ],
                     [
-                        'english' => 'Only company-approved tow trucks allowed.',
+                        'english' => 'Can\'t use any tow truck not from company.',
                         'malay' => 'Tidak boleh menggunakan lori tunda bukan dari pihak syarikat.'
                     ],
                     [
-                        'english' => 'Maximum accident charge is RM3000, depends on company’s loss.',
+                        'english' => 'If accident the charge depends on company loss and the maximum charge is RM3000.',
                         'malay' => 'Jika kemalangan, caj bergantung kepada kerugian syarikat dan caj maksimum adalah RM3000.'
                     ],
                     [
-                        'english' => 'Company has the right to inform Police if renter commits criminal activities.',
+                        'english' => 'Company has the right to inform Police when renter is suspected in doing criminal activity.',
                         'malay' => 'Pihak syarikat berhak memaklumkan kepada pihak Polis jika penyewa disyaki melakukan jenayah.'
                     ],
                     [
-                        'english' => 'Breaching terms results in blacklisting (CTOS), charges, penalties, legal actions.',
+                        'english' => 'If breaching terms and condition, renter will be blacklisted (CTOS) with 10% service charge from outstanding payment, maximum penalty of RM3000 & law action will be taken including publishing renter details to website or social medias.',
                         'malay' => 'Pelanggaran terma dan syarat, penyewa akan disenarai hitam (CTOS) termasuk caj perkhidmatan 10%, penalti maksimum RM3000 & tindakan undang-undang termasuk menyiarkan maklumat penyewa di laman web atau media sosial.'
                     ],
                     [
@@ -179,38 +179,38 @@
 
                 {{-- OTP Request Buttons (matching your original PHP logic) --}}
                 <div class="mb-3">
-        <a href="{{ route('otp.request', ['customer_id' => $customer->id, 'phone_no' => $customer->phone_no, 'type' => 'whatsapp']) }}"
-        target="_blank"
-        class="btn btn-success">
-            {{ $language == 'english' ? 'Send OTP via WhatsApp' : 'Hantar OTP melalui WhatsApp' }}
-            <i class="fa fa-whatsapp"></i>
-        </a>
+                    <a href="{{ route('otp.request', ['customer_id' => $customer->id, 'phone_no' => $customer->phone_no, 'type' => 'whatsapp']) }}"
+                    target="_blank"
+                    class="btn btn-success">
+                        {{ $language == 'english' ? 'Send OTP via WhatsApp' : 'Hantar OTP melalui WhatsApp' }}
+                        <i class="fa fa-whatsapp"></i>
+                    </a>
 
-        <a href="{{ route('otp.request', ['customer_id' => $customer->id, 'phone_no' => $customer->phone_no, 'type' => 'message']) }}"
-        class="btn btn-primary">
-            {{ $language == 'english' ? 'Send OTP via SMS' : 'Hantar OTP melalui SMS' }}
-            <i class="fa fa-commenting-o"></i>
-        </a>
-    </div>
-
-
-            <form action="{{ route('agreement.verifyOtp', ['booking_id' => $booking->id]) }}" method="POST">
-                @csrf
-                <div class="mb-3">
-                    <label class="form-label">{{ $language == 'english' ? 'Enter OTP Code Here' : 'Masukkan Kod OTP di sini' }}</label>
-                    <input type="text" name="otp_code"
-                        class="form-control @error('otp_code') is-invalid @enderror"
-                        maxlength="6" minlength="6" required>
-                    @error('otp_code')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
+                    <a href="{{ route('otp.request', ['customer_id' => $customer->id, 'phone_no' => $customer->phone_no, 'type' => 'message']) }}"
+                    class="btn btn-primary">
+                        {{ $language == 'english' ? 'Send OTP via SMS' : 'Hantar OTP melalui SMS' }}
+                        <i class="fa fa-commenting-o"></i>
+                    </a>
                 </div>
 
-                <button type="submit" class="btn btn-primary">
-                    {{ $language == 'english' ? 'Verify & Proceed' : 'Sahkan & Teruskan' }}
-                </button>
-            </form>
 
+                <form action="{{ route('agreement.verifyOtp', ['booking_id' => $booking->id]) }}" method="POST">
+                    @csrf
+                    <div class="mb-3">
+                        <label class="form-label">{{ $language == 'english' ? 'Enter OTP Code Here' : 'Masukkan Kod OTP di sini' }}</label>
+                        <input type="text" name="otp_code"
+                            class="form-control @error('otp_code') is-invalid @enderror"
+                            maxlength="6" minlength="6" required>
+                        @error('otp_code')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        {{ $language == 'english' ? 'Verify & Proceed' : 'Sahkan & Teruskan' }}
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 

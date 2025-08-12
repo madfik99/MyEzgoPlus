@@ -21,6 +21,7 @@
         "google/analytics-data": "^0.21.0",
         "google/apiclient": "*",
         "guzzlehttp/guzzle": "^7.9",
+        "intervention/image": "^3.11",
         "jeroendesloovere/vcard": "^1.7",
         "kavenegar/php": "^1.2",
         "kkomelin/laravel-translatable-string-exporter": "^1.22",

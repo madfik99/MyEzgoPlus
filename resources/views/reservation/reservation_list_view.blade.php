@@ -62,8 +62,8 @@
     @endif
 
     @if (in_array($booking->available, ['Out', 'Extend']))
-        @if ($excess === 'true' || $excess === 'extend')
-            {{-- Return with extension modal --}}
+        {{-- @if ($excess === 'true' || $excess === 'extend')
+            Return with extension modal 
             <button 
                 class="btn btn-secondary"
                 type="button"
@@ -71,8 +71,8 @@
                 data-bs-target=".bs-return-extend-modal-lg">
                 <i class="fa fa-external-link">&nbsp;</i>Return
             </button>
-        @else
-            {{-- Normal Return --}}
+        @else--}}
+            {{-- Normal Return 
             <button 
                 class="btn btn-secondary"
                 type="button"
@@ -80,7 +80,7 @@
                 data-bs-target=".bs-return-modal-lg">
                 <i class="fa fa-level-up">&nbsp;</i>Return
             </button>
-        @endif
+        @endif--}}
 
         {{-- Extend Button --}}
         <button 
@@ -686,19 +686,33 @@
     </div>
     <div class="card-body pb-2">
         <div class="table-responsive">
-           <h6 class="mb-2 text-primary">Pickup</h6>
+            <h6 class="mb-2 text-primary">Pickup</h6>
             <div class="row mb-3">
-                @forelse($pickupInteriorImages as $index => $image)
-                    <div class="col-md-3 mb-3">
-                        <img src="{{ asset('assets/img/car_state/pickup/interior/' . $image) }}?nocache={{ time() }}"
-                            class="img-fluid rounded border shadow-sm image-thumb"
-                            alt="Pickup Interior Image {{ $index + 1 }}"
-                            data-bs-toggle="modal" data-bs-target="#imageModal"
-                            data-bs-image="{{ asset('assets/img/car_state/pickup/interior/' . $image) }}">
-                    </div>
-                @empty
-                    <div class="col-12"><i>Interior image is not yet available</i></div>
-                @endforelse
+                @php
+                    $interiorLabels = [
+                        '1' => 'Dashboard & Windscreen',
+                        '2' => 'First Row Seat',
+                        '3' => 'Second Row Seat',
+                        '4' => 'Third Row Seat (Optional)',
+                        '5' => 'Fourth Row Seat (Optional)',
+                    ];
+                @endphp
+
+                @forelse($pickupInteriorImages as $image)
+                @php
+                    $label = $interiorLabels[$image->no] ?? 'Pickup Interior Image';
+                @endphp
+                <div class="col-md-3 mb-3">
+                    <img src="{{ asset('storage/' . $image->file_name) }}?nocache={{ time() }}"
+                        class="img-fluid rounded border shadow-sm image-thumb"
+                        alt="{{ $label }}"
+                        data-bs-toggle="modal" data-bs-target="#imageModal"
+                        data-bs-image="{{ asset('storage/' . $image->file_name) }}">
+                </div>
+            @empty
+                <div class="col-12"><i>Interior image is not yet available</i></div>
+            @endforelse
+
             </div>
 
             <h6 class="mb-2 text-primary">Return</h6>
@@ -706,10 +720,10 @@
                 @forelse($returnInteriorImages as $index => $image)
                     <div class="col-md-3 mb-3">
                         <img src="{{ asset('assets/img/car_state/return/interior/' . $image) }}?nocache={{ time() }}"
-                            class="img-fluid rounded border shadow-sm image-thumb"
-                            alt="Return Interior Image {{ $index + 1 }}"
-                            data-bs-toggle="modal" data-bs-target="#imageModal"
-                            data-bs-image="{{ asset('assets/img/car_state/return/interior/' . $image) }}">
+                             class="img-fluid rounded border shadow-sm image-thumb"
+                             alt="Return Interior Image {{ $index + 1 }}"
+                             data-bs-toggle="modal" data-bs-target="#imageModal"
+                             data-bs-image="{{ asset('assets/img/car_state/return/interior/' . $image) }}">
                     </div>
                 @empty
                     <div class="col-12"><i>Interior image for return is not yet available</i></div>
@@ -718,6 +732,7 @@
         </div>
     </div>
 </div>
+
 {{-- End Car Interior Image State Section --}}
 
 {{-- Car Exterior Image State Section --}}
@@ -727,29 +742,45 @@
     </div>
     <div class="card-body pb-2">
         <div class="table-responsive">
+
+            {{-- Pickup Section --}}
             <h6 class="mb-2 text-primary">Pickup</h6>
             <div class="row mb-3">
                 @php
                     $pickupExteriorImages = \App\Models\UploadData::where('booking_trans_id', $booking->id)
                         ->where('position', 'pickup_exterior')
                         ->where('file_size', '!=', 0)
-                        ->latest('id')
-                        ->pluck('file_name');
+                        ->orderBy('no')
+                        ->get(['file_name', 'no']);
+
+                    $exteriorLabels = [
+                        1 => 'Front Left',
+                        2 => 'Front Right',
+                        3 => 'Rear Left',
+                        4 => 'Rear Right',
+                        5 => 'Rear',
+                        6 => 'Front with Customer',
+                        7 => 'Front View',
+                    ];
                 @endphp
 
-                @forelse($pickupExteriorImages as $index => $image)
+                @forelse($pickupExteriorImages as $image)
+                    @php
+                        $label = $exteriorLabels[$image->no] ?? 'Pickup Exterior Image';
+                    @endphp
                     <div class="col-md-3 mb-3">
-                        <img src="{{ asset('assets/img/car_state/pickup/exterior/' . $image) }}?nocache={{ time() }}"
+                        <img src="{{ asset('storage/' . $image->file_name) }}?nocache={{ time() }}"
                             class="img-fluid rounded border shadow-sm image-thumb"
-                            alt="Pickup Exterior Image {{ $index + 1 }}"
+                            alt="{{ $label }}"
                             data-bs-toggle="modal" data-bs-target="#imageModal"
-                            data-bs-image="{{ asset('assets/img/car_state/pickup/exterior/' . $image) }}">
+                            data-bs-image="{{ asset('storage/' . $image->file_name) }}">
                     </div>
                 @empty
                     <div class="col-12"><i>Exterior pickup image is not yet available</i></div>
                 @endforelse
             </div>
 
+            {{-- Return Section --}}
             <h6 class="mb-2 text-primary">Return</h6>
             <div class="row">
                 @php
@@ -775,6 +806,7 @@
         </div>
     </div>
 </div>
+
 {{-- End Car Exterior Image State Section --}}
 
 
@@ -838,30 +870,36 @@
         <b><a class="text-muted">Remark: | = Scratch &nbsp;&nbsp; O = Broken &nbsp;&nbsp; △ = Dent &nbsp;&nbsp; □ = Missing</a></b>
     </div>
     <div class="card-body pb-2">
-        <div class="table-responsive">
-            <div class="row g-4">
-                {{-- Pickup Image --}}
-                <div class="col-md-6 text-center">
-                    <div class="fw-bold mb-2">Pickup</div>
-                    @if(!empty($checklist->car_out_image))
-                        <img src="{{ asset('storage/'.$checklist->car_out_image) }}?nocache={{ time() }}" alt="Pickup Condition" class="img-fluid rounded border" style="max-width: 450px; height: auto;">
-                    @else
-                        <img src="{{ asset('images/pickup.jpg') }}?nocache={{ time() }}" alt="Pickup Default" class="img-fluid rounded border" style="max-width: 450px; height: auto;">
-                    @endif
-                </div>
+    <div class="table-responsive">
+        <div class="row g-4">
 
-                {{-- Return Image --}}
-                <div class="col-md-6 text-center">
-                    <div class="fw-bold mb-2">Return</div>
-                    @if(!empty($checklist->car_in_image))
-                        <img src="{{ asset('storage/'.$checklist->car_in_image) }}?nocache={{ time() }}" alt="Return Condition" class="img-fluid rounded border" style="max-width: 450px; height: auto;">
-                    @else
-                        <img src="{{ asset('images/pickup.jpg') }}?nocache={{ time() }}" alt="Return Default" class="img-fluid rounded border" style="max-width: 450px; height: auto;">
-                    @endif
-                </div>
+            {{-- Pickup Image --}}
+            <div class="col-md-6 text-center">
+                <div class="fw-bold mb-2">Pickup</div>
+                <a href="{{ route('pickup.damage', ['id' => $booking->id]) }}"
+                   style="display:inline-block; width:450px; max-width:100%; height:300px;  border-radius:8px; overflow:hidden;">
+                    <img src="{{ !empty($checklist->car_out_image) ? asset('storage/'.$checklist->car_out_image) : asset('images/pickup.jpg') }}?nocache={{ time() }}"
+                         alt="Pickup Condition"
+                         style="width:100%; height:100%; object-fit:contain; display:block;">
+                </a>
             </div>
+
+            {{-- Return Image --}}
+            <div class="col-md-6 text-center">
+                <div class="fw-bold mb-2">Return</div>
+                <a href="{{ route('return.damage', ['id' => $booking->id]) }}"
+                    style="display:inline-block; width:450px; max-width:100%; height:300px; border-radius:8px; overflow:hidden;">
+                        <img src="{{ !empty($checklist->car_in_image) ? asset('storage/'.$checklist->car_in_image) : asset('images/pickup.jpg') }}?nocache={{ time() }}"
+                             alt="Return Condition"
+                             style="width:100%; height:100%; object-fit:contain; display:block;">
+                
+                </a>
+            </div>
+
         </div>
     </div>
+</div>
+
 </div>
 {{-- End Car Condition Pic Section --}}
 
@@ -950,7 +988,7 @@
             <table class="table mytable ">
                 <thead>
                     <tr>
-                        <th></th>
+                        <th>#</th>
                         <th>Pay to (Name)</th>
                         <th colspan="4">Return Date @ Time</th>
                     </tr>
@@ -1163,15 +1201,21 @@
 
 
 <!-- Interior Image Modal -->
-<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+<div id="imageModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalLabel">Preview Image</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
             <div class="modal-body text-center">
-                <img src="" id="modalImage" class="img-fluid rounded">
+                <img src="" id="modalImage" class="img-fluid rounded w-75 mx-auto d-block" alt="Interior Image Preview">
+
             </div>
         </div>
     </div>
 </div>
+
 
 <!-- Car State Image Modal (fixed) -->
 <div class="modal fade" id="carStateImageModal" tabindex="-1" aria-hidden="true">
@@ -1309,11 +1353,14 @@
 document.addEventListener('DOMContentLoaded', function () {
         const imageModal = document.getElementById('imageModal');
         const modalImage = document.getElementById('modalImage');
+        const modalTitle = document.getElementById('imageModalLabel');
 
         document.querySelectorAll('.image-thumb').forEach(img => {
             img.addEventListener('click', function () {
                 const src = this.getAttribute('data-bs-image');
+                const alt = this.getAttribute('alt');
                 modalImage.setAttribute('src', src);
+                modalTitle.textContent = alt || 'Image Preview';
             });
         });
     });
