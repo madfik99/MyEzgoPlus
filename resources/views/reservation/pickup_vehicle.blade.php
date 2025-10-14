@@ -67,24 +67,41 @@
                         <div class="form-group row">
                             <label class="col-sm-3 col-form-label">Payment Made (MYR)</label>
                             <div class="col-sm-9">
-                                <input type="text" class="form-control" value="{{ number_format($booking->balance, 2)}} ({{($booking->payment_type) }})" disabled>
+                                <input type="text" class="form-control" value="{{ number_format($booking->balance, 2)}}" disabled>
                             </div>
                         </div>
 
                         <div class="form-group row">
                             <label class="col-sm-3 col-form-label">Booking Fee (MYR)</label>
                             <div class="col-sm-9">
-                                <input type="text" class="form-control" value="{{ number_format($booking->refund_dep, 2) }}" disabled>
+                                <input type="text" class="form-control" value="{{ number_format($booking->refund_dep, 2)}} ({{($booking->refund_dep_payment) }})" disabled>
                             </div>
                         </div>
+
+                        @php
+                            $payment_balance = $booking->est_total - $booking->balance;
+                        @endphp
 
                         <div class="form-group row">
                             <label class="col-sm-3 col-form-label">Balance Payment (MYR)</label>
                             <div class="col-sm-9">
-                                <input type="text" class="form-control" value="{{ number_format($booking->est_total - $booking->balance, 2) }}" disabled>
-
+                                <input type="text" class="form-control" 
+                                    value="{{ number_format($payment_balance, 2) }}" disabled>
                             </div>
                         </div>
+
+                        @if($payment_balance > 0)
+                            {{-- send the amount to the controller --}}
+                            <input type="hidden" name="payment_balance" value="{{ number_format($payment_balance, 2, '.', '') }}">
+
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Payment Receipt</label>
+                                <div class="col-sm-9">
+                                    <input type="file" name="pickup_receipt" class="form-control" accept="image/*" required>
+                                </div>
+                            </div>
+                        @endif
+
 
                         <div class="form-group row">
                             <label class="col-sm-3 col-form-label">Payment Status</label>
@@ -113,12 +130,7 @@
                         </div>
 
 
-                        {{-- <div class="form-group row">
-                            <label class="col-sm-3 col-form-label">Payment Receipt</label>
-                            <div class="col-sm-9">
-                                <input type="file" name="pickup_receipt" class="form-control" accept="image/*" required>
-                            </div>
-                        </div> --}}
+                       
                     
                 </div>
             </div>
@@ -423,13 +435,14 @@
                         ['top' => '40%', 'left' => '47.5%', 'part' => 'Front Hood'],
                     ],
                     'left' => [
-                        ['top' => '30.5%', 'left' => '33.5%', 'part' => 'Front Glass Left'],
-                        ['top' => '55.5%', 'left' => '72.5%', 'part' => 'Rear Left Tire'],
+                        ['top' => '23.5%', 'left' => '50.5%', 'part' => 'Upper Body Left'],//new
+                        ['top' => '57.5%', 'left' => '72.5%', 'part' => 'Rear Left Tire'],
                         ['top' => '60%', 'left' => '45%', 'part' => 'Left Skirt'],
-                        ['top' => '42.5%', 'left' => '25%', 'part' => 'Left Front Fender'],
-                        ['top' => '55.5%', 'left' => '19.5%', 'part' => 'Front Left Tire'],
-                        ['top' => '45%', 'left' => '50.5%', 'part' => 'Left Door'],
-                        ['top' => '33.5%', 'left' => '43.5%', 'part' => 'Left Window'],
+                        ['top' => '42.5%', 'left' => '22%', 'part' => 'Left Front Fender'],
+                        ['top' => '57.5%', 'left' => '19.5%', 'part' => 'Front Left Tire'],
+                        ['top' => '45%', 'left' => '40.5%', 'part' => 'Front Left Door'], //new
+                        ['top' => '45%', 'left' => '60.5%', 'part' => 'Rear Left Door'], //new
+                        ['top' => '42.5%', 'left' => '78.5%', 'part' => 'Left Rear Fender'], //new
                     ],
                     'rear' => [
                         ['top' => '22.5%', 'left' => '47.5%', 'part' => 'Rear Glass'],
@@ -439,13 +452,14 @@
                         ['top' => '40%', 'left' => '47.5%', 'part' => 'Rear Bonnet'],
                     ],
                     'right' => [
-                        ['top' => '30.5%', 'left' => '60.5%', 'part' => 'Front Glass Right'],
-                        ['top' => '55.5%', 'left' => '76.5%', 'part' => 'Front Right Tire'],
+                        ['top' => '23.5%', 'left' => '45.5%', 'part' => 'Upper Body Right'], //new
+                        ['top' => '57.5%', 'left' => '73.5%', 'part' => 'Front Right Tire'],
                         ['top' => '60%', 'left' => '45%', 'part' => 'Right Skirt'],
-                        ['top' => '42.5%', 'left' => '70%', 'part' => 'Right Front Fender'],
-                        ['top' => '55.5%', 'left' => '23.5%', 'part' => 'Rear Right Tire'],
-                        ['top' => '45%', 'left' => '45.5%', 'part' => 'Right Door'],
-                        ['top' => '33.5%', 'left' => '50.5%', 'part' => 'Right Window'],
+                        ['top' => '42.5%', 'left' => '75%', 'part' => 'Right Front Fender'],
+                        ['top' => '57.5%', 'left' => '20.5%', 'part' => 'Rear Right Tire'],
+                        ['top' => '45%', 'left' => '55.5%', 'part' => 'Front Right Door'], //new
+                        ['top' => '45%', 'left' => '35.5%', 'part' => 'Rear Right Door'], //new
+                        ['top' => '42.5%', 'left' => '18.5%', 'part' => 'Right Rear Fender'], //new
                     ],
                 ],
                 'hatchback' => [
@@ -459,13 +473,14 @@
                         ['top' => '40%', 'left' => '48%', 'part' => 'Front Hood'],
                     ],
                     'left' => [
-                        ['top' => '30.5%', 'left' => '33.5%', 'part' => 'Front Glass Left'],
+                        ['top' => '25.5%', 'left' => '55.5%', 'part' => 'Upper Body Left'],  //new
                         ['top' => '55.5%', 'left' => '78.5%', 'part' => 'Rear Left Tire'],
                         ['top' => '58%', 'left' => '45%', 'part' => 'Left Skirt'],
-                        ['top' => '43.5%', 'left' => '23%', 'part' => 'Left Front Fender'],
+                        ['top' => '43.5%', 'left' => '20%', 'part' => 'Left Front Fender'],
                         ['top' => '55.5%', 'left' => '15.5%', 'part' => 'Front Left Tire'],
-                        ['top' => '45%', 'left' => '54.5%', 'part' => 'Left Door'],
-                        ['top' => '33.5%', 'left' => '43.5%', 'part' => 'Left Window'],
+                        ['top' => '45%', 'left' => '40.5%', 'part' => 'Front Left Door'], //new
+                        ['top' => '45%', 'left' => '60.5%', 'part' => 'Rear Left Door'], //new
+                        ['top' => '43.5%', 'left' => '80.5%', 'part' => 'Left Rear Fender'], //new
                     ],
                     'rear' => [
                         ['top' => '30.5%', 'left' => '47.5%', 'part' => 'Rear Glass'],
@@ -475,13 +490,14 @@
                         ['top' => '45%', 'left' => '47.5%', 'part' => 'Rear Bonnet'],
                     ],
                     'right' => [
-                        ['top' => '30.5%', 'left' => '60.5%', 'part' => 'Front Glass Right'],
+                        ['top' => '25.5%', 'left' => '38.5%', 'part' => 'Upper Body Right'], //new
                         ['top' => '55.5%', 'left' => '76.5%', 'part' => 'Front Right Tire'],
                         ['top' => '57%', 'left' => '45%', 'part' => 'Right Skirt'],
-                        ['top' => '42.5%', 'left' => '73%', 'part' => 'Right Front Fender'],
+                        ['top' => '43.5%', 'left' => '75%', 'part' => 'Right Front Fender'],
                         ['top' => '55.5%', 'left' => '16.5%', 'part' => 'Rear Right Tire'],
-                        ['top' => '45%', 'left' => '40.5%', 'part' => 'Right Door'],
-                        ['top' => '33.5%', 'left' => '50.5%', 'part' => 'Right Window'],
+                        ['top' => '45%', 'left' => '50.5%', 'part' => 'Front Right Door'], //new
+                        ['top' => '45%', 'left' => '30.5%', 'part' => 'Rear Right Door'], //new
+                        ['top' => '43.5%', 'left' => '13.5%', 'part' => 'Left Rear Fender'], //new
                     ],
                     
                 ],
@@ -496,34 +512,37 @@
                         ['top' => '33%', 'left' => '48%', 'part' => 'Front Hood'],
                     ],
                     'left' => [
-                        ['top' => '28.5%', 'left' => '33.5%', 'part' => 'Front Glass Left'],
+                        ['top' => '20.5%', 'left' => '55.5%', 'part' => 'Upper Body Left'], //new
                         ['top' => '60.5%', 'left' => '74.5%', 'part' => 'Rear Left Tire'],
                         ['top' => '60%', 'left' => '45%', 'part' => 'Left Skirt'],
-                        ['top' => '40.5%', 'left' => '23%', 'part' => 'Left Front Fender'],
+                        ['top' => '40.5%', 'left' => '20%', 'part' => 'Left Front Fender'],
                         ['top' => '60.5%', 'left' => '18.5%', 'part' => 'Front Left Tire'],
-                        ['top' => '45%', 'left' => '50.5%', 'part' => 'Left Door'],
-                        ['top' => '30.5%', 'left' => '43.5%', 'part' => 'Left Window'],
+                        ['top' => '45%', 'left' => '40.5%', 'part' => 'Front Left Door'], //new
+                        ['top' => '45%', 'left' => '60.5%', 'part' => 'Rear Left Door'], //new
+                        ['top' => '40.5%', 'left' => '80.5%', 'part' => 'Left Rear Fender'], //new
                     ],
                     'rear' => [
                         ['top' => '28.5%', 'left' => '47.5%', 'part' => 'Rear Glass'],
                         ['top' => '39.5%', 'left' => '78.5%', 'part' => 'Rear Right Headlight'],
-                        // ['top' => '39.5%', 'left' => '13.5%', 'part' => 'Rear Left Headlight'],
-                        // ['top' => '60%', 'left' => '47.5%', 'part' => 'Rear Bumper'],
-                        // ['top' => '45%', 'left' => '47.5%', 'part' => 'Rear Bonnet'],
+                        ['top' => '39.5%', 'left' => '13.5%', 'part' => 'Rear Left Headlight'],
+                        ['top' => '60%', 'left' => '47.5%', 'part' => 'Rear Bumper'],
+                        ['top' => '45%', 'left' => '47.5%', 'part' => 'Rear Bonnet'],
                     ],
-                    // 'right' => [
-                    //     ['top' => '28.5%', 'left' => '60.5%', 'part' => 'Front Glass Right'],
-                    //     ['top' => '60.5%', 'left' => '78.5%', 'part' => 'Front Right Tire'],
-                    //     ['top' => '60%', 'left' => '50%', 'part' => 'Right Skirt'],
-                    //     ['top' => '40.5%', 'left' => '73%', 'part' => 'Right Front Fender'],
-                    //     ['top' => '60.5%', 'left' => '20.5%', 'part' => 'Rear Right Tire'],
-                    //     ['top' => '45%', 'left' => '45.5%', 'part' => 'Right Door'],
-                    //     ['top' => '30.5%', 'left' => '50.5%', 'part' => 'Right Window'],
-                    // ],
+                    'right' => [
+                        ['top' => '20.5%', 'left' => '37.5%', 'part' => 'Upper Body Right'], //new
+                        ['top' => '60.5%', 'left' => '78.5%', 'part' => 'Front Right Tire'],
+                        ['top' => '60%', 'left' => '50%', 'part' => 'Right Skirt'],
+                        ['top' => '40.5%', 'left' => '75%', 'part' => 'Right Front Fender'],
+                        ['top' => '60.5%', 'left' => '20.5%', 'part' => 'Rear Right Tire'],
+                        ['top' => '45%', 'left' => '60.5%', 'part' => 'Front Right Door'], //new
+                        ['top' => '45%', 'left' => '40.5%', 'part' => 'Rear Right Door'], //new
+                        ['top' => '40.5%', 'left' => '15.5%', 'part' => 'Right Rear Fender'], //new
+                    ],
                     
                 ],
                 'van' => [
                     'front' => [
+                        ['top' => '5%', 'left' => '48%', 'part' => 'Front Roof'], //new
                         ['top' => '20%', 'left' => '48%', 'part' => 'Front Glass'],
                         ['top' => '45%', 'left' => '80%', 'part' => 'Right Headlight'],
                         ['top' => '28%', 'left' => '6%', 'part' => 'Left Side Mirror'],
@@ -533,29 +552,32 @@
                         ['top' => '38%', 'left' => '48%', 'part' => 'Front Hood'],
                     ],
                     'left' => [
-                        ['top' => '28.5%', 'left' => '25.5%', 'part' => 'Front Glass Left'],
+                        ['top' => '20.5%', 'left' => '55.5%', 'part' => 'Upper Body Left'], //new
                         ['top' => '63.5%', 'left' => '75.5%', 'part' => 'Rear Left Tire'],
                         ['top' => '64%', 'left' => '45%', 'part' => 'Left Skirt'],
                         ['top' => '45.5%', 'left' => '20%', 'part' => 'Left Front Fender'],
                         ['top' => '63.5%', 'left' => '20.5%', 'part' => 'Front Left Tire'],
-                        ['top' => '45%', 'left' => '45.5%', 'part' => 'Left Door'],
-                        ['top' => '30.5%', 'left' => '40.5%', 'part' => 'Left Window'],
+                        ['top' => '45%', 'left' => '35.5%', 'part' => 'Front Left Door'], //new
+                        ['top' => '45%', 'left' => '55.5%', 'part' => 'Rear Left Door'], //new
+                        ['top' => '45.5%', 'left' => '77.5%', 'part' => 'Left Rear Fender'], //new
                     ],
                     'rear' => [
-                        ['top' => '28.5%', 'left' => '47.5%', 'part' => 'Rear Glass'],
+                        ['top' => '20.5%', 'left' => '47.5%', 'part' => 'Rear Roof'], //new
+                        ['top' => '30.5%', 'left' => '47.5%', 'part' => 'Rear Glass'],
                         ['top' => '45.5%', 'left' => '80.5%', 'part' => 'Rear Right Headlight'],
                         ['top' => '45.5%', 'left' => '12.5%', 'part' => 'Rear Left Headlight'],
                         ['top' => '63%', 'left' => '47.5%', 'part' => 'Rear Bumper'],
                         ['top' => '45%', 'left' => '47.5%', 'part' => 'Rear Bonnet'],
                     ],
                     'right' => [
-                        ['top' => '28.5%', 'left' => '68.5%', 'part' => 'Front Glass Right'],
+                        ['top' => '20.5%', 'left' => '38.5%', 'part' => 'Upper Body Right'], //new
                         ['top' => '63.5%', 'left' => '75.5%', 'part' => 'Front Right Tire'],
                         ['top' => '64%', 'left' => '50%', 'part' => 'Right Skirt'],
                         ['top' => '45.5%', 'left' => '77%', 'part' => 'Right Front Fender'],
                         ['top' => '63.5%', 'left' => '20.5%', 'part' => 'Rear Right Tire'],
-                        ['top' => '45%', 'left' => '50.5%', 'part' => 'Right Door'],
-                        ['top' => '30.5%', 'left' => '55.5%', 'part' => 'Right Window'],
+                        ['top' => '45%', 'left' => '60.5%', 'part' => 'Front Right Door'], //new
+                        ['top' => '45%', 'left' => '35.5%', 'part' => 'Rear Right Door'], //new
+                        ['top' => '45.5%', 'left' => '18.5%', 'part' => 'Right Rear Fender'], //new
                     ],
                     
                 ],
@@ -570,13 +592,14 @@
                         ['top' => '40%', 'left' => '48%', 'part' => 'Front Hood'],
                     ],
                     'left' => [
-                        ['top' => '28.5%', 'left' => '25.5%', 'part' => 'Front Glass Left'],
-                        ['top' => '63.5%', 'left' => '72.5%', 'part' => 'Rear Left Tire'],
+                        ['top' => '19.5%', 'left' => '50.5%', 'part' => 'Upper Body Left'], //new
+                        ['top' => '60.5%', 'left' => '71.5%', 'part' => 'Rear Left Tire'],
                         ['top' => '62%', 'left' => '45%', 'part' => 'Left Skirt'],
-                        ['top' => '45.5%', 'left' => '20%', 'part' => 'Left Front Fender'],
-                        ['top' => '63.5%', 'left' => '18.5%', 'part' => 'Front Left Tire'],
-                        ['top' => '45%', 'left' => '45.5%', 'part' => 'Left Door'],
-                        ['top' => '30.5%', 'left' => '40.5%', 'part' => 'Left Window'],
+                        ['top' => '45.5%', 'left' => '18%', 'part' => 'Left Front Fender'],
+                        ['top' => '60.5%', 'left' => '17.5%', 'part' => 'Front Left Tire'],
+                        ['top' => '48%', 'left' => '35.5%', 'part' => 'Front Left Door'], //new
+                        ['top' => '48%', 'left' => '60.5%', 'part' => 'Rear Left Door'], //new
+                        ['top' => '45.5%', 'left' => '80.5%', 'part' => 'Left Rear Fender'], //new
                     ],
                     'rear' => [
                         ['top' => '28.5%', 'left' => '47.5%', 'part' => 'Rear Glass'],
@@ -586,13 +609,14 @@
                         ['top' => '53%', 'left' => '47.5%', 'part' => 'Rear Bonnet'],
                     ],
                     'right' => [
-                        ['top' => '28.5%', 'left' => '68.5%', 'part' => 'Front Glass Right'],
-                        ['top' => '63.5%', 'left' => '77.5%', 'part' => 'Front Right Tire'],
+                        ['top' => '19.5%', 'left' => '45.5%', 'part' => 'Upper Body Right'], //new
+                        ['top' => '60.5%', 'left' => '77.5%', 'part' => 'Front Right Tire'],
                         ['top' => '62%', 'left' => '50%', 'part' => 'Right Skirt'],
                         ['top' => '45.5%', 'left' => '77%', 'part' => 'Right Front Fender'],
-                        ['top' => '63.5%', 'left' => '23.5%', 'part' => 'Rear Right Tire'],
-                        ['top' => '45%', 'left' => '50.5%', 'part' => 'Right Door'],
-                        ['top' => '30.5%', 'left' => '55.5%', 'part' => 'Right Window'],
+                        ['top' => '60.5%', 'left' => '23.5%', 'part' => 'Rear Right Tire'],
+                        ['top' => '48%', 'left' => '60.5%', 'part' => 'Front Right Door'], //new
+                        ['top' => '48%', 'left' => '35.5%', 'part' => 'Rear Right Door'], //new
+                        ['top' => '45.5%', 'left' => '18.5%', 'part' => 'Right Rear Fender'], //new
                     ],
                     
                 ],
@@ -629,7 +653,6 @@
                                                 @endforeach
 
                                             </div>
-
                                         <div class="mt-4 damage-preview-list"></div>
                                     </div>
                                 </div>
@@ -687,7 +710,7 @@
                                 </div>
                             </div>
 
-                            {{-- <div class="col-12 col-md-6 d-flex">
+                            <div class="col-12 col-md-6 d-flex">
                                 <!-- RIGHT SIDE LAYOUT CARD -->
                                 <div class="card w-100 h-100">
                                     <div class="card-header">
@@ -708,7 +731,7 @@
                                         <div class="mt-4 damage-preview-list"></div>
                                     </div>
                                 </div>
-                            </div> --}}
+                            </div>
                         </div>
                     </div>
             </div>
@@ -764,7 +787,7 @@
             </div>
 
             <!-- Modal -->
-            <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+            {{-- <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -772,9 +795,7 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body">
-                            {{-- <input type="hidden" name="damageParts[]" id="damage-part-name">
-                            <input type="hidden" name="damageRemarks[]" id="damage-remarks-hidden"> --}}
-
+                            
                             <div class="mb-3">
                                 <label for="damagePhoto" class="form-label">Upload Images</label>
                                 <input type="file" class="form-control damage-photo-input" multiple>
@@ -795,7 +816,83 @@
                         </div>
                     </div>
                 </div>
+            </div> --}}
+            <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="uploadModalLabel">Upload Damage Photo</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <!-- NEW: Camera section (shown if camera works) -->
+                        <div id="cameraSection" class="mb-3 d-none">
+                        <div class="ratio ratio-4x3 mb-2">
+                            <video id="cameraVideo" autoplay playsinline muted></video>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button" id="btnTakePhoto" class="btn btn-outline-primary">Take Photo</button>
+                            <span id="cameraInfo" class="text-muted small"></span>
+                        </div>
+                        </div>
+
+                        <!-- Upload fallback (hidden if camera is available) -->
+                        <div class="mb-3" id="uploadGroup">
+                        <label for="damagePhoto" class="form-label">Upload Images</label>
+                        <input type="file" class="form-control damage-photo-input" multiple>
+                        </div>
+
+                        <div class="mb-3">
+                        <label for="damageRemarks" class="form-label">Damage Remarks</label>
+                        <textarea class="form-control" id="damageRemarks" rows="3"
+                            placeholder="e.g. dented, cracked, missing..."></textarea>
+                        </div>
+
+                        <div id="selected-part-display" class="text-muted small"></div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" id="saveDamagePhoto" class="btn btn-primary">Save Photo</button>
+                    </div>
+                    </div>
+                </div>
             </div>
+
+            {{-- Preview/Edit modal for unsaved thumbnails
+            <div class="modal fade" id="previewEditModal" tabindex="-1" aria-labelledby="previewEditLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="previewEditLabel">Preview & Edit</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <img id="peImage" src="#" class="img-fluid rounded border" style="max-height: 500px;" alt="Preview">
+                        <div class="row g-3 mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Part</label>
+                            <input id="pePart" class="form-control" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Remarks</label>
+                            <textarea id="peRemarks" class="form-control" rows="3"></textarea>
+                        </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <input type="file" id="peReplaceInput" class="d-none" accept="image/*">
+                        <button type="button" id="peReplaceBtn" class="btn btn-outline-secondary">Replace photo</button>
+                        <button type="button" id="peDeleteBtn" class="btn btn-danger ms-auto">Delete</button>
+                        <button type="button" id="peSaveBtn" class="btn btn-primary">Save changes</button>
+                    </div>
+                    </div>
+                </div>
+            </div> --}}
+
 
     
 
@@ -880,93 +977,394 @@ document.addEventListener('DOMContentLoaded', function () {
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const uploadModal = document.getElementById('uploadModal');
-    const remarksInput = document.getElementById('damageRemarks');
-    const fileInput = document.querySelector('.damage-photo-input');
-    const saveDamageBtn = document.getElementById('saveDamagePhoto');
+  // =========================
+  // Existing references
+  // =========================
+  const uploadModal = document.getElementById('uploadModal');
+  const remarksInput = document.getElementById('damageRemarks');
+  const fileInput = document.querySelector('.damage-photo-input');
+  const saveDamageBtn = document.getElementById('saveDamagePhoto');
 
-    const masterPhotos = document.getElementById('masterDamagePhotos');
-    const masterPartsInput = document.getElementById('masterDamageParts');
-    const masterRemarksInput = document.getElementById('masterDamageRemarks');
-    const damageContainer = document.getElementById('damage-input-container');
+  const masterPhotos = document.getElementById('masterDamagePhotos');
+  const masterPartsInput = document.getElementById('masterDamageParts');
+  const masterRemarksInput = document.getElementById('masterDamageRemarks');
+  const damageContainer = document.getElementById('damage-input-container');
 
-    let previewTarget = null;
-    let currentPartName = '';
-    let allFilesDT = new DataTransfer();
-    let allRemarks = [];
-    let allParts = [];
+  // === Camera elements (existing) ===
+  const cameraSection = document.getElementById('cameraSection');
+  const cameraVideo = document.getElementById('cameraVideo');
+  const btnTakePhoto = document.getElementById('btnTakePhoto');
+  const uploadGroup = document.getElementById('uploadGroup');
+  const cameraInfo = document.getElementById('cameraInfo');
 
-    uploadModal.addEventListener('show.bs.modal', function (event) {
-        const button = event.relatedTarget;
-        currentPartName = button.getAttribute('data-part');
-        previewTarget = button.closest('.card-body').querySelector('.damage-preview-list');
+  let previewTarget = null;
+  let currentPartName = '';
+  let allFilesDT = new DataTransfer();
+  let allRemarks = [];
+  let allParts = [];
 
-        remarksInput.value = '';
-        fileInput.value = '';
-        document.getElementById('selected-part-display').textContent = "Selected Part: " + currentPartName;
+  // === Camera state (existing) ===
+  let cameraStream = null;
+  let cameraEnabled = false;
+  let cameraShots = []; // Array<File> captured from live camera
+
+  // =========================
+  // Editing state + helpers
+  // =========================
+  let damageItems = [];    // [{id, file, part, remark}]
+  let currentEditId = null;
+
+  // Edit modal refs
+  let editModalEl = null;
+  let peImage = null;
+  let pePart = null;        // read-only
+  let peRemarks = null;
+  let peDeleteBtn = null;
+  let peSaveBtn = null;
+  let editModal = null;
+
+  function uid() { return 'dmg_' + Math.random().toString(36).slice(2) + Date.now(); }
+
+  function fileToDataURL(file) {
+    return new Promise((resolve) => {
+      const r = new FileReader();
+      r.onload = e => resolve(e.target.result);
+      r.readAsDataURL(file);
+    });
+  }
+
+  function ensureEditModalExists() {
+    // If you already added the modal in Blade, we just bind to it.
+    editModalEl = document.getElementById('previewEditModal');
+    if (!editModalEl) {
+      // Create the modal dynamically (no Replace button, Part is read-only)
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = `
+<div class="modal fade" id="previewEditModal" tabindex="-1" aria-labelledby="previewEditLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="previewEditLabel">Preview & Edit</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <img id="peImage" src="#" class="img-fluid rounded border" style="max-height: 500px;" alt="Preview">
+        <div class="row g-3 mt-3">
+          <div class="col-md-6">
+            <label class="form-label">Part (read-only)</label>
+            <input id="pePart" class="form-control bg-dark" readonly />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Remarks</label>
+            <textarea id="peRemarks" class="form-control" rows="3" placeholder="Update remarks..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="peDeleteBtn" class="btn btn-danger me-auto">Delete</button>
+        <button type="button" id="peSaveBtn" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>`;
+      document.body.appendChild(wrapper.firstElementChild);
+      editModalEl = document.getElementById('previewEditModal');
+    }
+
+    // Bind refs
+    peImage = document.getElementById('peImage');
+    pePart = document.getElementById('pePart');
+    peRemarks = document.getElementById('peRemarks');
+    peDeleteBtn = document.getElementById('peDeleteBtn');
+    peSaveBtn = document.getElementById('peSaveBtn');
+
+    if (!editModal) editModal = new bootstrap.Modal(editModalEl);
+
+    // Bind buttons once
+    if (!editModalEl.dataset.bound) {
+      peDeleteBtn.addEventListener('click', onDeleteItem);
+      peSaveBtn.addEventListener('click', onSaveEdits);
+      editModalEl.dataset.bound = '1';
+    }
+  }
+
+  function ensurePreviewGrid(container) {
+    if (!container) return;
+    container.classList.add(
+      'row','row-cols-1','row-cols-sm-2','row-cols-md-3','g-3','preview-grid','w-100','mt-3'
+    );
+    const empty = container.querySelector('.no-uploads');
+    if (empty) empty.remove();
+  }
+
+  async function renderCardForItem(item, container) {
+    ensurePreviewGrid(container);
+    const col = document.createElement('div');
+    col.className = 'col';
+    col.innerHTML = `
+      <div class="card h-100 shadow-sm border-0 bg-light" data-damage-id="${item.id}">
+        <img class="card-img-top" alt="${item.part}" style="height:110px;object-fit:cover;">
+        <div class="card-body p-2">
+          <h6 class="card-title mb-1 text-primary small">${item.part}</h6>
+          <p class="card-text text-muted small mb-0">${item.remark || 'No remarks.'}</p>
+        </div>
+      </div>`;
+    const img = col.querySelector('img');
+    img.src = await fileToDataURL(item.file);
+    col.querySelector('.card').addEventListener('click', () => openEditor(item.id));
+    container.appendChild(col);
+  }
+
+  async function updateCardUI(item) {
+    const card = document.querySelector(`.card[data-damage-id="${item.id}"]`);
+    if (!card) return;
+    const img = card.querySelector('img');
+    img.src = await fileToDataURL(item.file);
+    card.querySelector('.card-title').textContent = item.part;
+    card.querySelector('.card-text').textContent = item.remark || 'No remarks.';
+  }
+
+  function syncMasterInputs() {
+    allFilesDT = new DataTransfer();
+    allRemarks = [];
+    allParts = [];
+
+    damageItems.forEach(it => {
+      allFilesDT.items.add(it.file);
+      allParts.push(it.part);
+      allRemarks.push(it.remark || '');
     });
 
-    saveDamageBtn.addEventListener('click', function () {
-        const remarkText = remarksInput.value.trim();
-        const files = fileInput.files;
+    masterPhotos.files = allFilesDT.files;
+    masterPartsInput.value = JSON.stringify(allParts);
+    masterRemarksInput.value = JSON.stringify(allRemarks);
 
-        if (!files.length) {
-            alert("Please select at least one photo.");
-            return;
-        }
+    damageContainer.innerHTML = '';
+    for (let i = 0; i < allParts.length; i++) {
+      const partInput = document.createElement('input');
+      partInput.type = 'hidden';
+      partInput.name = 'damageParts[]';
+      partInput.value = allParts[i];
+      damageContainer.appendChild(partInput);
 
-        if (!remarkText) {
-            alert("Please enter a remark.");
-            return;
-        }
+      const remarkInput = document.createElement('input');
+      remarkInput.type = 'hidden';
+      remarkInput.name = 'damageRemarks[]';
+      remarkInput.value = allRemarks[i];
+      damageContainer.appendChild(remarkInput);
+    }
+  }
 
-        Array.from(files).forEach((file) => {
-            allFilesDT.items.add(file);
-            allRemarks.push(remarkText);
-            allParts.push(currentPartName);
+  async function openEditor(id) {
+    ensureEditModalExists();
+    currentEditId = id;
+    const item = damageItems.find(x => x.id === id);
+    if (!item) return;
+    peImage.src = await fileToDataURL(item.file);
+    pePart.value = item.part || '';         // read-only
+    peRemarks.value = item.remark || '';
+    editModal.show();
+  }
 
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const wrapper = document.createElement('div');
-                wrapper.classList.add('mb-2');
-                wrapper.innerHTML = `
-                    <strong>${currentPartName}</strong><br>
-                    <span>${remarkText}</span><br>
-                    <img src="${e.target.result}" style="max-width: 100px;" class="me-2 mb-2">
-                `;
-                previewTarget.appendChild(wrapper);
-            };
-            reader.readAsDataURL(file);
-        });
+  function onDeleteItem() {
+    if (!currentEditId) return;
+    damageItems = damageItems.filter(x => x.id !== currentEditId);
+    const card = document.querySelector(`.card[data-damage-id="${currentEditId}"]`);
+    if (card) card.closest('.col').remove();
+    currentEditId = null;
+    syncMasterInputs();
+    editModal.hide();
+  }
 
-        // Assign images
-        masterPhotos.files = allFilesDT.files;
+  async function onSaveEdits() {
+    if (!currentEditId) return;
+    const item = damageItems.find(x => x.id === currentEditId);
+    if (!item) return;
+    // Part stays unchanged (read-only). Only update remarks.
+    item.remark = peRemarks.value.trim();
+    await updateCardUI(item);
+    syncMasterInputs();
+    editModal.hide();
+  }
 
-        // Encode arrays to JSON
-        masterPartsInput.value = JSON.stringify(allParts);
-        masterRemarksInput.value = JSON.stringify(allRemarks);
+  // =========================
+  // Camera helpers (existing)
+  // =========================
+  async function startCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      cameraEnabled = false;
+      cameraSection.classList.add('d-none');
+      uploadGroup.classList.remove('d-none');
+      return false;
+    }
+    try {
+      cameraStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } },
+        audio: false
+      });
+      cameraVideo.srcObject = cameraStream;
+      await cameraVideo.play();
+      cameraEnabled = true;
+      cameraSection.classList.remove('d-none');
+      uploadGroup.classList.add('d-none');
+      cameraInfo.textContent = 'Camera ready. Take photo.';
+      return true;
+    } catch (e) {
+      cameraEnabled = false;
+      cameraSection.classList.add('d-none');
+      uploadGroup.classList.remove('d-none');
+      cameraInfo.textContent = '';
+      return false;
+    }
+  }
 
-        // Optional backup: append as array inputs
-        damageContainer.innerHTML = '';
-        for (let i = 0; i < allParts.length; i++) {
-            const partInput = document.createElement('input');
-            partInput.type = 'hidden';
-            partInput.name = 'damageParts[]';
-            partInput.value = allParts[i];
-            damageContainer.appendChild(partInput);
+  function stopCamera() {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(t => t.stop());
+      cameraStream = null;
+    }
+    cameraEnabled = false;
+    cameraShots = [];
+    cameraInfo.textContent = '';
+  }
 
-            const remarkInput = document.createElement('input');
-            remarkInput.type = 'hidden';
-            remarkInput.name = 'damageRemarks[]';
-            remarkInput.value = allRemarks[i];
-            damageContainer.appendChild(remarkInput);
-        }
+  function captureFromCamera() {
+    if (!cameraEnabled) return;
+    const canvas = document.createElement('canvas');
+    const w = cameraVideo.videoWidth || 1280;
+    const h = cameraVideo.videoHeight || 960;
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(cameraVideo, 0, 0, w, h);
+    canvas.toBlob(function (blob) {
+      if (!blob) return;
+      const file = new File([blob], `camera_${Date.now()}.jpg`, { type: 'image/jpeg' });
+      cameraShots.push(file);
+      cameraInfo.textContent = `${cameraShots.length} photo(s) captured`;
+    }, 'image/jpeg', 0.9);
+  }
 
-        // Close modal
-        bootstrap.Modal.getInstance(uploadModal).hide();
+  // =========================
+  // Modal wiring (existing)
+  // =========================
+  uploadModal.addEventListener('show.bs.modal', async function (event) {
+    const button = event.relatedTarget;
+    currentPartName = button.getAttribute('data-part');
+    previewTarget = button.closest('.card-body').querySelector('.damage-preview-list');
+    ensurePreviewGrid(previewTarget);
+
+    remarksInput.value = '';
+    if (fileInput) fileInput.value = '';
+    const selectedPartEl = document.getElementById('selected-part-display');
+    if (selectedPartEl) {
+      selectedPartEl.textContent = "Selected Part: " + currentPartName;
+    }
+
+    // Ensure edit modal exists (now without Replace & Part editing)
+    ensureEditModalExists();
+
+    await startCamera();
+  });
+
+  uploadModal.addEventListener('hide.bs.modal', stopCamera);
+
+  if (btnTakePhoto) {
+    btnTakePhoto.addEventListener('click', captureFromCamera);
+  }
+
+  // =========================
+  // Save button (kept; makes cards editable)
+  // =========================
+  saveDamageBtn.addEventListener('click', function () {
+    const remarkText = remarksInput.value.trim();
+
+    const useCamera = cameraEnabled && cameraShots.length > 0;
+    const files = useCamera ? cameraShots : (fileInput ? fileInput.files : []);
+
+    if (!files || !files.length) {
+      alert("Please take or select at least one photo.");
+      return;
+    }
+    if (!remarkText) {
+      alert("Please enter a remark.");
+      return;
+    }
+
+    Array.from(files).forEach((file) => {
+      // Keep your existing arrays (compat)
+      allFilesDT.items.add(file);
+      allRemarks.push(remarkText);
+      allParts.push(currentPartName);
+
+      // Track as editable item
+      const item = { id: uid(), file, part: currentPartName, remark: remarkText };
+      damageItems.push(item);
+
+      // Preview card
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        ensurePreviewGrid(previewTarget);
+        const col = document.createElement('div');
+        col.className = 'col';
+        col.innerHTML = `
+            <div class="card h-100 shadow-sm border-0 bg-light" data-damage-id="${item.id}">
+              <img src="${e.target.result}"
+                   class="card-img-top"
+                   alt="${currentPartName}"
+                   style="height:110px;object-fit:cover;">
+              <div class="card-body p-2">
+                <h6 class="card-title mb-1 text-primary small">${currentPartName}</h6>
+                <p class="card-text text-muted small mb-0">${remarkText || 'No remarks.'}</p>
+              </div>
+            </div>
+        `;
+        col.querySelector('.card').addEventListener('click', () => openEditor(item.id));
+        previewTarget.appendChild(col);
+      };
+      reader.readAsDataURL(file);
     });
+
+    // Keep your original assignment
+    masterPhotos.files = allFilesDT.files;
+    masterPartsInput.value = JSON.stringify(allParts);
+    masterRemarksInput.value = JSON.stringify(allRemarks);
+
+    // Optional backups
+    damageContainer.innerHTML = '';
+    for (let i = 0; i < allParts.length; i++) {
+      const partInput = document.createElement('input');
+      partInput.type = 'hidden';
+      partInput.name = 'damageParts[]';
+      partInput.value = allParts[i];
+      damageContainer.appendChild(partInput);
+
+      const remarkInput = document.createElement('input');
+      remarkInput.type = 'hidden';
+      remarkInput.name = 'damageRemarks[]';
+      remarkInput.value = allRemarks[i];
+      damageContainer.appendChild(remarkInput);
+    }
+
+    // Rebuild master inputs from items to reflect future edits/deletes
+    syncMasterInputs();
+
+    // Reset per-flow temp state
+    if (useCamera) {
+      cameraShots = [];
+      cameraInfo.textContent = '';
+    } else if (fileInput) {
+      fileInput.value = '';
+    }
+
+    // Close modal
+    bootstrap.Modal.getInstance(uploadModal).hide();
+  });
 });
 </script>
+
+
+
 
 
 

@@ -30,6 +30,7 @@ use App\Http\Controllers\ProposalController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\SuperAdmin\SettingsController as SuperAdminSettingsController;
 use App\Http\Controllers\WarehouseTransferController;
 use App\Http\Controllers\WorkSpaceController;
@@ -39,8 +40,14 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\AgreementController;
 use App\Http\Controllers\BookingReceiptController;
+use App\Http\Controllers\ReturnReceiptController;
 use App\Http\Controllers\AgreementConditionController;
 use App\Http\Controllers\PickupController;
+use App\Http\Controllers\ReturnController;
+use App\Http\Controllers\ExtendReceiptController;
+use App\Http\Controllers\ExtendController;
+use App\Http\Controllers\DeleteRequestController;
+use Google\Service\BigQueryReservation\Reservation;
 
 /*
 |--------------------------------------------------------------------------
@@ -116,6 +123,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     Route::get('/booking_receipt/{id}', [BookingReceiptController::class, 'generateReceipt'])->name('booking_receipt.generate');
 
+    Route::get('/return_receipt/{id}', [ReturnReceiptController::class, 'generate'])
+     ->name('return_receipt.generate');
+
     Route::get('/agreementcondition', [AgreementConditionController::class, 'showInspectionForm'])->name('agreement.condition');
     
     Route::get('otp_request', [AgreementConditionController::class, 'requestOtp'])->name('otp.request');
@@ -135,6 +145,83 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Route::get('/pickup-validate/{booking_id}', [PickupController::class, 'validatePickup'])
     //     ->name('pickup.validate');
+
+    Route::get('/reservations/{booking}/edit-customer', [ReservationController::class, 'editCust'])
+    ->name('customers.edit'); // ?type=exist|change
+
+    Route::post('/reservations/{booking}/edit-customer/existing', [ReservationController::class, 'updateExistingCust'])
+        ->name('customers.updateExisting');
+
+        // routes/web.php
+    Route::post('/reservations/{booking}/edit-customer/change',
+        [ReservationController::class, 'updateChangeCust']
+    )->name('customers.updateChange');
+
+    // routes/web.php
+    Route::get('/customers/lookup-by-nric', [CustomerController::class, 'lookupByNric'])
+        ->name('customers.lookupByNric');
+
+
+    // Return vehicle (normal)
+    Route::get('/return-vehicle/{booking_id}', [ReturnController::class, 'show'])
+        ->name('return.vehicle');
+
+    Route::post('return-vehicle/{booking}', [ReturnController::class, 'updateReturn'])->name('return.update');
+
+    // Extend booking (normal)
+    // Route::get('/extend', [ReturnController::class, 'create'])
+    //     ->name('extend.start');
+    // Extend booking (normal)
+    Route::match(['get','post'], '/extend', [ReturnController::class, 'extend'])
+        ->name('extend.start');
+
+        // routes/web.php
+    Route::post('/reservation/{booking}/extend/proceed', [ReturnController::class, 'proceedExtend'])
+    ->name('extend.proceed');
+
+    
+    Route::get('/bookings/{booking}/extends/{extend}/receipt/print', [ExtendReceiptController::class, 'print'])
+    ->name('extends.receipts.print');
+
+
+    Route::get('/extends/{extend}/edit', [ExtendController::class, 'edit'])->name('extends.edit');
+    Route::put('/extends/{extend}',      [ExtendController::class, 'update'])->name('extends.update');
+
+    Route::delete('/extends/{extend}', [ExtendController::class, 'destroy'])
+    ->name('extends.destroy');
+
+
+    // Overdue return (excess true/extend)
+    // Route::get('/overdue-return', [ReturnController::class, 'overdue'])
+    //     ->name('overdue.return');
+
+    Route::match(['get','post'], '/reservations/{booking}/overdue', [ReturnController::class, 'overdue'])
+    ->name('overdue.return');
+    
+    Route::post('/overdue/{booking}/proceed-outstanding', [ReturnController::class, 'proceedOutstanding'])
+    ->name('overdue.proceedOutstanding');
+
+    Route::get('/bookings/{booking}/delete-reason', [DeleteRequestController::class, 'create'])
+        ->name('delete.request.create');
+
+    // Submit the reason
+    Route::post('/bookings/{booking}/delete-reason', [DeleteRequestController::class, 'store'])
+        ->name('delete.request.store');
+
+    // (Optional) Pending list view after submit
+    Route::get('/delete-requests', [DeleteRequestController::class, 'index'])
+        ->name('delete.request.index');
+
+    Route::get('/delete-requests/{booking}', [DeleteRequestController::class, 'show'])
+        ->name('delete.request.show'); // search icon opens this
+
+    // Actions
+    Route::post('/delete-requests/{booking}/confirm', [DeleteRequestController::class, 'confirm'])
+        ->name('delete.request.confirm');
+    Route::post('/delete-requests/{booking}/decline', [DeleteRequestController::class, 'decline'])
+        ->name('delete.request.decline');
+    
+
 
     Route::get('/phpinfo', function () {
         phpinfo();

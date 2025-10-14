@@ -87,4 +87,9 @@ class BookingTrans extends Model
         return $this->belongsTo(ClassModel::class, 'class_id');
     }
 
+    public function uploads()    
+    { 
+        return $this->hasMany(UploadData::class, 'booking_trans_id'); 
+    }
+
 }

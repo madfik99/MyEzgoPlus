@@ -1,0 +1,271 @@
+public function updateReturn(Request $request, $booking_id)
+    {
+        $booking = BookingTrans::with(['vehicle', 'customer'])->findOrFail($booking_id);
+
+        // If you post these as JSON strings from the modal, decode them (safe even if absent)
+        $request->merge([
+            'damageParts'   => json_decode($request->input('damageParts', '[]'), true),
+            'damageRemarks' => json_decode($request->input('damageRemarks', '[]'), true),
+        ]);
+
+        $validated = $request->validate([
+            'fuel_level'         => 'required|integer|min:0|max:6',
+            'mileage'            => 'required|integer|min:0',
+            'car_seat_condition' => 'required|string|max:100',
+            'cleanliness'        => 'required|string|max:100',
+            'markingRemarks'     => 'nullable|string|max:2000',
+
+            // Fabric board + signature (data URLs)
+            'hidden_datas'            => 'nullable|string',
+            'signature_return_data'   => 'nullable|string',
+
+            // Interior/Exterior checklist flags
+            'start_engine'      => 'nullable|string',
+            'engine_condition'  => 'nullable|string',
+            'test_gear'         => 'nullable|string',
+            'no_alarm'          => 'nullable|string',
+            'air_conditioner'   => 'nullable|string',
+            'radio'             => 'nullable|string',
+            'wiper'             => 'nullable|string',
+            'window_condition'  => 'nullable|string',
+            'power_window'      => 'nullable|string',
+            'perfume'           => 'nullable|string',
+            'carpet'            => 'nullable|string',
+            'sticker_p'         => 'nullable|string',
+
+            'jack'              => 'nullable|string',
+            'tools'             => 'nullable|string',
+            'signage'           => 'nullable|string',
+            'tyre_spare'        => 'nullable|string',
+            'child_seat'        => 'nullable|string',
+            'lamp'              => 'nullable|string',
+            'tyres_condition'   => 'nullable|string',
+
+            // Arrays of return images (match your Blade: name="interior[]" and "exterior[]")
+            'interior'          => 'sometimes|array',
+            'interior.*'        => 'image|mimes:jpeg,jpg,png|max:8192',
+            'exterior'          => 'sometimes|array',
+            'exterior.*'        => 'image|mimes:jpeg,jpg,png|max:8192',
+
+            // Optional damage photos on return
+            'damagePhotos'      => 'nullable|array|max:50',
+            'damagePhotos.*'    => 'image|mimes:jpeg,png,jpg|max:5120',
+            'damageParts'       => 'nullable|array',
+            'damageParts.*'     => 'nullable|string|max:255',
+            'damageRemarks'     => 'nullable|array',
+            'damageRemarks.*'   => 'nullable|string|max:255',
+        ]);
+
+        // Mark vehicle back in the yard
+        $booking->update([
+            'available' => 'Park',
+        ]);
+
+        // Map -> car_in_* columns
+        $interiorChecks = [
+            'start_engine'      => 'car_in_start_engine',
+            'engine_condition'  => 'car_in_engine_condition',
+            'test_gear'         => 'car_in_test_gear',
+            'no_alarm'          => 'car_in_no_alarm',
+            'air_conditioner'   => 'car_in_air_conditioner',
+            'radio'             => 'car_in_radio',
+            'wiper'             => 'car_in_wiper',
+            'window_condition'  => 'car_in_window_condition',
+            'power_window'      => 'car_in_power_window',
+            'perfume'           => 'car_in_perfume',
+            'carpet'            => 'car_in_carpet',
+            'sticker_p'         => 'car_in_sticker_p',
+        ];
+        $exteriorChecks = [
+            'jack'              => 'car_in_jack',
+            'tools'             => 'car_in_tools',
+            'signage'           => 'car_in_signage',
+            'tyre_spare'        => 'car_in_tyre_spare',
+            'child_seat'        => 'car_in_child_seat',
+            'lamp'              => 'car_in_lamp',
+            'tyres_condition'   => 'car_in_tyres_condition',
+        ];
+
+        // Input order → your “no” mapping
+        $interiorNoOrder = [1,2,3,4,5];
+        $exteriorNoOrder = [1,3,5,4,2,7,6]; // front-left, rear-left, rear, rear-right, front-right, front, front+customer
+
+        // Helper to persist data URL images to storage/app/public/{dir}
+        $saveDataUrl = function (?string $dataUrl, string $dir, string $basename) {
+            if (!$dataUrl || !Str::startsWith($dataUrl, 'data:image/')) return null;
+            $ext = Str::contains($dataUrl, 'image/png') ? 'png' : 'jpg';
+            $raw = Str::after($dataUrl, 'base64,');
+            $bin = base64_decode(str_replace(' ', '+', $raw));
+            if ($bin === false) return null;
+
+            $path = "{$dir}/{$basename}-".Str::uuid().".{$ext}";
+            Storage::disk('public')->put($path, $bin);
+            return $path; // relative path under public disk
+        };
+
+        DB::beginTransaction();
+
+        try {
+            // ---------- Checklist upsert (CAR IN) ----------
+            $checklist = Checklist::firstOrNew(['booking_trans_id' => $booking->id]);
+
+            foreach ($interiorChecks as $input => $col) {
+                $checklist->{$col} = $request->has($input) ? 'Y' : 'X';
+            }
+            foreach ($exteriorChecks as $input => $col) {
+                $checklist->{$col} = $request->has($input) ? 'Y' : 'X';
+            }
+
+            $checklist->car_in_fuel_level     = (int)$validated['fuel_level'];
+            $checklist->car_in_mileage        = (int)$validated['mileage'];
+            $checklist->car_in_seat_condition = $validated['car_seat_condition'];
+            $checklist->car_in_cleanliness    = $validated['cleanliness'];
+            $checklist->car_in_remark         = $request->input('markingRemarks');
+
+            // Damage sketch (return)
+            if ($request->filled('hidden_datas')) {
+                $path = $saveDataUrl($request->input('hidden_datas'), 'damage_markings', "return_{$booking_id}");
+                if ($path) {
+                    // Ensure your column name exists (you used car_in_image earlier)
+                    $checklist->car_in_image = $path;
+                }
+            }
+
+            // Signature (return) — keep filename only if you want to match legacy
+            if ($request->filled('signature_return_data')) {
+                $sigPath = $saveDataUrl($request->input('signature_return_data'), 'sign_return', "sign_return_{$booking_id}");
+                if ($sigPath) {
+                    $checklist->car_in_sign_image = basename($sigPath);
+                }
+            }
+
+            //$checklist->modified = Carbon::now();
+            $checklist->save();
+
+            // ---------- Return images ----------
+            $manager = new ImageManager(new GdDriver());
+
+            // Sequence for RETURN positions only
+            $lastSeq = UploadData::whereIn('position', ['return_interior','return_exterior','return_damage'])
+                ->orderByDesc('created')
+                ->value('sequence') ?? 0;
+            $nextSequence = ($lastSeq % 5) + 1;
+
+            // Clean old images in this sequence for this booking
+            UploadData::where('booking_trans_id', $booking_id)
+                ->whereIn('position', ['return_interior','return_exterior','return_damage'])
+                ->where('sequence', $nextSequence)
+                ->delete();
+
+            // INTERIOR
+            if ($request->hasFile('interior')) {
+                foreach ($request->file('interior') as $idx => $file) {
+                    if (!$file) continue;
+                    $no = $interiorNoOrder[$idx] ?? ($idx + 1);
+
+                    $filename = "{$booking_id}_return_interior_seq{$nextSequence}_no{$no}.jpg";
+                    $image    = $manager->read($file)->scale(width: 800)->toJpeg(75);
+                    $path     = "return_images/interior/{$filename}";
+                    Storage::disk('public')->put($path, (string) $image);
+
+                    UploadData::create([
+                        'booking_trans_id' => $booking_id,
+                        'position'         => 'return_interior',
+                        'sequence'         => $nextSequence,
+                        'no'               => $no,
+                        'customer_id'      => optional($booking->customer)->id,
+                        'file_name'        => $path,
+                        'file_size'        => Storage::disk('public')->size($path),
+                        'file_type'        => 'jpg',
+                        'status'           => 'Active',
+                        'vehicle_id'       => optional($booking->vehicle)->id,
+                        'modified'         => Carbon::now(),
+                        'mid'              => auth()->id(),
+                        'created'          => Carbon::now(),
+                        'cid'              => auth()->id(),
+                    ]);
+                }
+            }
+
+            // EXTERIOR
+            if ($request->hasFile('exterior')) {
+                foreach ($request->file('exterior') as $idx => $file) {
+                    if (!$file) continue;
+                    $no = $exteriorNoOrder[$idx] ?? ($idx + 1);
+
+                    $filename = "{$booking_id}_return_exterior_seq{$nextSequence}_no{$no}.jpg";
+                    $image    = $manager->read($file)->scale(width: 800)->toJpeg(75);
+                    $path     = "return_images/exterior/{$filename}";
+                    Storage::disk('public')->put($path, (string) $image);
+
+                    UploadData::create([
+                        'booking_trans_id' => $booking_id,
+                        'position'         => 'return_exterior',
+                        'sequence'         => $nextSequence,
+                        'no'               => $no,
+                        'customer_id'      => optional($booking->customer)->id,
+                        'file_name'        => $path,
+                        'file_size'        => Storage::disk('public')->size($path),
+                        'file_type'        => 'jpg',
+                        'status'           => 'Active',
+                        'vehicle_id'       => optional($booking->vehicle)->id,
+                        'modified'         => Carbon::now(),
+                        'mid'              => auth()->id(),
+                        'created'          => Carbon::now(),
+                        'cid'              => auth()->id(),
+                    ]);
+                }
+            }
+
+            // Optional: return damage photos
+            if ($request->hasFile('damagePhotos')) {
+                $photos  = $request->file('damagePhotos', []);
+                $parts   = $request->input('damageParts', []);
+                $remarks = $request->input('damageRemarks', []);
+
+                foreach ($photos as $i => $file) {
+                    if (!$file) continue;
+
+                    $part      = Arr::get($parts, $i, 'Unknown');
+                    $remark    = Arr::get($remarks, $i, '');
+                    $partSafe   = preg_replace('/[^a-z0-9]/i', '_', strtolower($part));
+                    $remarkSafe = preg_replace('/[^a-z0-9]/i', '_', strtolower($remark));
+                    $no = $i + 1;
+
+                    $filename = "{$booking_id}_return_damage_seq{$nextSequence}_no{$no}_{$partSafe}_{$remarkSafe}.jpg";
+                    $image    = $manager->read($file)->scale(width: 800)->toJpeg(75);
+                    $path     = "return_images/damage/{$filename}";
+                    Storage::disk('public')->put($path, (string) $image);
+
+                    UploadData::create([
+                        'booking_trans_id' => $booking_id,
+                        'position'         => 'return_damage',
+                        'sequence'         => $nextSequence,
+                        'no'               => $no,
+                        'customer_id'      => optional($booking->customer)->id,
+                        'file_name'        => $path,
+                        'file_size'        => Storage::disk('public')->size($path),
+                        'file_type'        => 'jpg',
+                        'status'           => 'Active',
+                        'vehicle_id'       => optional($booking->vehicle)->id,
+                        'modified'         => Carbon::now(),
+                        'mid'              => auth()->id(),
+                        'created'          => Carbon::now(),
+                        'cid'              => auth()->id(),
+                        'label'            => $part,
+                        'remarks'          => $remark,
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return redirect()
+                ->route('reservation.view', $booking_id)
+                ->with('success', 'Return details successfully saved.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            report($e);
+            return back()->with('error', 'Failed to save return: '.$e->getMessage())->withInput();
+        }
+    }

@@ -29,10 +29,19 @@ class Sale extends Model
         'staff_id',
         'mid',
         'modified',
-        'created'
+        'created',
     ];
 
-    // Example relationships
+    protected $casts = [
+        'deposit'      => 'decimal:2',
+        'total_sale'   => 'decimal:2',
+        'pickup_date'  => 'datetime',
+        'return_date'  => 'datetime',
+        'modified'     => 'datetime',
+        'created'      => 'datetime',
+    ];
+
+    /** Relationships */
     public function booking()
     {
         return $this->belongsTo(BookingTrans::class, 'booking_trans_id');
@@ -42,5 +51,24 @@ class Sale extends Model
     {
         return $this->belongsTo(Vehicle::class, 'vehicle_id');
     }
+
+    public function saleLogs()
+    {
+        return $this->hasMany(SaleLog::class, 'sale_id');
+    }
     
+    public function logs()
+    {
+        return $this->hasMany(\App\Models\SaleLog::class, 'sale_id');
+    }
+
+    public function journalLogs()
+    {
+        return $this->hasMany(JournalLog::class, 'sale_id');
+    }
+
+    public function outstandingSales()
+    {
+        return $this->hasMany(OutstandingSale::class, 'sale_id');
+    }
 }

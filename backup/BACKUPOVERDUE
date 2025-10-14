@@ -1,0 +1,702 @@
+@extends('layouts.main')
+
+@section('page-title')
+    {{ $overdueType === 'extend' ? __('Return need Extend') : __('Overdue Return') }}
+@endsection
+
+@section('page-breadcrumb')
+    {{ $overdueType === 'extend' ? __('Return need Extend') : __('Overdue Return') }}
+@endsection
+
+@section('content')
+<div class="container mt-4">
+
+    @if(session('success'))
+        <div class="alert alert-success mb-3">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger mb-3">{{ session('error') }}</div>
+    @endif
+    @if ($errors->any())
+        <div class="alert alert-danger mb-3">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    {{-- ===== Summary cards ===== --}}
+    <div class="row g-3 mb-3">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header"><strong>Base Rate</strong></div>
+                <div class="card-body">
+                    <input class="form-control" value="{{ $baseRateText }}" disabled>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header"><strong>Pickup Date &amp; Time</strong></div>
+                <div class="card-body">
+                    <input class="form-control" value="{{ $pickupDateTimeText }}" disabled>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <strong>Return Date &amp; Time</strong>
+                    @if($exceed)
+                        <abbr title="{{ $note }}"><i class="fa fa-info-circle ms-1" style="color:red"></i></abbr>
+                    @elseif($extend)
+                        <abbr title="{{ $note }}"><i class="fa fa-info-circle ms-1" style="color:green"></i></abbr>
+                    @endif
+                </div>
+                <div class="card-body">
+                    {{-- Reflects extend-to plus free time if H/D (H is clamped to 22:00 if needed) --}}
+                    <input class="form-control" value="{{ $returnDateTimeText }}" disabled>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ===== Discount ===== --}}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Discount</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ route('overdue.return', $booking->id) }}" class="form-horizontal">
+                @csrf
+                <input type="hidden" name="form_action" value="redeem">
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Overdue Base (MYR)</label>
+                        <input type="text" class="form-control" value="{{ number_format($overdueGross, 2) }}" disabled>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Discount (MYR)</label>
+                        <input type="text" class="form-control" value="{{ number_format($discountAmount, 2) }}" disabled>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Discount Code</label>
+                        <input type="text"
+                               class="form-control"
+                               name="discount_code"
+                               id="discount_code"
+                               value="{{ old('discount_code', $discountCode) }}"
+                               placeholder="e.g. HR1, DY1, SAVE10">
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    {{-- carry the RESOLVED values so POST recomputes properly --}}
+                    <input type="hidden" name="pickup_date"       value="{{ $pickupDate }}">
+                    <input type="hidden" name="pickup_time"       value="{{ $pickupTime }}">
+
+                    {{-- Effective display return (extend-to + free time if H/D) --}}
+                    <input type="hidden" name="return_date"       value="{{ $returnDate }}">
+                    <input type="hidden" name="return_time"       value="{{ $returnTime }}">
+
+                    {{-- Extend window (raw) --}}
+                    <input type="hidden" name="extend_from_date"  value="{{ $extendFromDate }}">
+                    <input type="hidden" name="extend_from_time"  value="{{ $extendFromTime }}">
+                    <input type="hidden" name="extend_to_date"    value="{{ $extendToDate }}">
+                    <input type="hidden" name="extend_to_time"    value="{{ $extendToTime }}">
+
+                    {{-- Optional bookkeeping --}}
+                    <input type="hidden" name="overdue_gross"     value="{{ $overdueGross }}">
+                    <input type="hidden" name="discount_amount"   value="{{ $discountAmount }}">
+                    <input type="hidden" name="subtotal"          value="{{ $subtotal }}">
+
+                    <button type="submit" class="btn btn-primary">Validate Discount</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- ===== Payment Details ===== --}}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Payment Details</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST"
+                  action="{{ route('overdue.return', $booking->id) }}"
+                  enctype="multipart/form-data"
+                  class="form-horizontal">
+                @csrf
+                <input type="hidden" name="form_action" value="proceed">
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Grand Total (MYR)</label>
+                        {{-- NET overdue AFTER discount (or after free time deduction) --}}
+                        <input type="text"
+                               class="form-control"
+                               value="{{ number_format($subtotal, 2) }}"
+                               disabled>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Payment Amount (MYR)</label>
+                        <input type="number" step="0.01" class="form-control" name="payment" required>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Payment Receipt (Image)</label>
+                        <input type="file" accept="image/png, image/jpeg" class="form-control" name="payment_receipt" required>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Payment Status</label>
+                        <select name="payment_status" class="form-control" required>
+                            <option value="">-- Please select --</option>
+                            <option value="Paid">Paid</option>
+                            <option value="Collect">Need to Collect</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Payment Type</label>
+                        <select name="payment_type" class="form-control" required>
+                            <option value="">-- Please select --</option>
+                            <option value="Collect">Need to Collect</option>
+                            <option value="Cash">Cash</option>
+                            <option value="Online">Online Transfer</option>
+                            <option value="Cheque">Cheque</option>
+                            <option value="QRPay">QRPay</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    {{-- carry forward (ACTIVE values) --}}
+                    <input type="hidden" name="pickup_date"        value="{{ $pickupDate }}">
+                    <input type="hidden" name="pickup_time"        value="{{ $pickupTime }}">
+
+                    {{-- Effective display return (extend-to + free time if H/D) --}}
+                    <input type="hidden" name="return_date"        value="{{ $returnDate }}">
+                    <input type="hidden" name="return_time"        value="{{ $returnTime }}">
+
+                    {{-- Extend window (raw) --}}
+                    <input type="hidden" name="extend_from_date"   value="{{ $extendFromDate }}">
+                    <input type="hidden" name="extend_from_time"   value="{{ $extendFromTime }}">
+                    <input type="hidden" name="extend_to_date"     value="{{ $extendToDate }}">
+                    <input type="hidden" name="extend_to_time"     value="{{ $extendToTime }}">
+
+                    {{-- For server reconciliation (optional) --}}
+                    <input type="hidden" name="price"              value="{{ $overdueGross }}">  {{-- gross overdue --}}
+                    <input type="hidden" name="total"              value="{{ $subtotal }}">      {{-- net overdue --}}
+                    <input type="hidden" name="discount_code"      value="{{ $discountCode }}">
+                    <input type="hidden" name="discount_amount"    value="{{ $discountAmount }}">
+
+                    <a href="{{ route('reservation.view', $booking->id) }}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-success">Proceed Return</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+@push('scripts')
+<script>
+(function() {
+  // Auto-refresh every 30 minutes (session keepalive-like)
+  let last = Date.now();
+  document.body.addEventListener('mousemove', ()=>last=Date.now());
+  document.body.addEventListener('keypress', ()=>last=Date.now());
+  setInterval(function(){
+      if (Date.now() - last >= 1800000) location.reload();
+  }, 1800000);
+})();
+</script>
+@endpush
+@endsection
+
+
+THIS IS BLADE BELOW ARE function
+
+
+public function overdue(Request $request, BookingTrans $booking)
+{
+    // ========= A) Resolve PICKUP and ORIGINAL planned RETURN =========
+    $pickupAt         = $this->mergeDateAndTime($booking->pickup_date, $booking->pickup_time);
+    $returnAtPlanOrig = $this->mergeDateAndTime($booking->return_date, $booking->return_time);
+
+    // ========= B) Resolve the OVERDUE WINDOW (Extend From → Extend To) =========
+    $extendFromDate = $request->input('extend_from_date')
+        ?? $request->query('extend_from_date')
+        ?? $returnAtPlanOrig->format('Y-m-d');
+    $extendFromTime = $request->input('extend_from_time')
+        ?? $request->query('extend_from_time')
+        ?? $returnAtPlanOrig->format('H:i');
+
+    $extendToDate = $request->input('extend_to_date')
+        ?? $request->query('extend_to_date')
+        ?? $request->input('return_date')
+        ?? $request->query('return_date')
+        ?? now()->format('Y-m-d');
+    $extendToTime = $request->input('extend_to_time')
+        ?? $request->query('extend_to_time')
+        ?? $request->input('return_time')
+        ?? $request->query('return_time')
+        ?? now()->format('H:i');
+
+    $extendFromAt = $this->mergeDateAndTime($extendFromDate, $extendFromTime);
+    $extendToAt   = $this->mergeDateAndTime($extendToDate,   $extendToTime);
+    if ($extendToAt->lt($extendFromAt)) {
+        $extendToAt = $extendFromAt->copy(); // clamp
+    }
+
+    // ========= C) Rates / helpers =========
+    $vehicle    = $booking->vehicle;
+    $priceClass = optional(optional($vehicle)->class)->priceClass;
+
+    $getRate = function (?object $pc, string $field): float {
+        return (float) ($pc?->$field ?? 0);
+    };
+
+    $hourlyRates = [
+        0  => 0,
+        1  => $getRate($priceClass,'hour'),
+        2  => $getRate($priceClass,'hour2'),
+        3  => $getRate($priceClass,'hour3'),
+        4  => $getRate($priceClass,'hour4'),
+        5  => $getRate($priceClass,'hour5'),
+        6  => $getRate($priceClass,'hour6'),
+        7  => $getRate($priceClass,'hour7'),
+        8  => $getRate($priceClass,'hour8'),
+        9  => $getRate($priceClass,'hour9'),
+        10 => $getRate($priceClass,'hour10'),
+        11 => $getRate($priceClass,'hour11'),
+        12 => $getRate($priceClass,'halfday'),
+        13 => $getRate($priceClass,'hour13'),
+        14 => $getRate($priceClass,'hour14'),
+        15 => $getRate($priceClass,'hour15'),
+        16 => $getRate($priceClass,'hour16'),
+        17 => $getRate($priceClass,'hour17'),
+        18 => $getRate($priceClass,'hour18'),
+        19 => $getRate($priceClass,'hour19'),
+        20 => $getRate($priceClass,'hour20'),
+        21 => $getRate($priceClass,'hour21'),
+        22 => $getRate($priceClass,'hour22'),
+        23 => $getRate($priceClass,'hour23'),
+    ];
+    $dailyRates = [
+        0  => 0,
+        1  => $getRate($priceClass,'oneday'),
+        2  => $getRate($priceClass,'twoday'),
+        3  => $getRate($priceClass,'threeday'),
+        4  => $getRate($priceClass,'fourday'),
+        5  => $getRate($priceClass,'fiveday'),
+        6  => $getRate($priceClass,'sixday'),
+        7  => $getRate($priceClass,'weekly'),
+        8  => $getRate($priceClass,'eightday'),
+        9  => $getRate($priceClass,'nineday'),
+        10 => $getRate($priceClass,'tenday'),
+        11 => $getRate($priceClass,'elevenday'),
+        12 => $getRate($priceClass,'twelveday'),
+        13 => $getRate($priceClass,'thirteenday'),
+        14 => $getRate($priceClass,'fourteenday'),
+        15 => $getRate($priceClass,'fifteenday'),
+        16 => $getRate($priceClass,'sixteenday'),
+        17 => $getRate($priceClass,'seventeenday'),
+        18 => $getRate($priceClass,'eighteenday'),
+        19 => $getRate($priceClass,'nineteenday'),
+        20 => $getRate($priceClass,'twentyday'),
+        21 => $getRate($priceClass,'twentyoneday'),
+        22 => $getRate($priceClass,'twentytwoday'),
+        23 => $getRate($priceClass,'twentythreeday'),
+        24 => $getRate($priceClass,'twentyfourday'),
+        25 => $getRate($priceClass,'twentyfiveday'),
+        26 => $getRate($priceClass,'twentysixday'),
+        27 => $getRate($priceClass,'twentysevenday'),
+        28 => $getRate($priceClass,'twentyeightday'),
+        29 => $getRate($priceClass,'twentynineday'),
+        30 => $getRate($priceClass,'monthly'),
+    ];
+
+    $computeSubtotal = function (int $day, int $hour, float $monthly_subtotal = 0.0) use ($hourlyRates, $dailyRates, $priceClass): float {
+        $time_subtotal = (float) ($hourlyRates[$hour] ?? 0);
+        if ($day === 0) {
+            $time_day_subtotal = $time_subtotal;
+        } else {
+            $day_subtotal = (float) ($dailyRates[$day] ?? 0);
+            $time_day_subtotal = $time_subtotal + $day_subtotal;
+
+            $nextTier = $dailyRates[$day + 1] ?? null;
+            if ($nextTier && $time_day_subtotal >= (float)$nextTier) {
+                $time_day_subtotal = (float)$nextTier;
+            }
+
+            if ($day === 30) {
+                $car_rate_extra = (float) ($priceClass?->monthly ?? 0) + (float) ($priceClass?->oneday ?? 0);
+                if ($time_day_subtotal >= $car_rate_extra) {
+                    $time_day_subtotal = $car_rate_extra;
+                }
+            }
+        }
+        return (float) ($time_day_subtotal + $monthly_subtotal);
+    };
+
+    // ========= D) Overdue minutes & gross amount =========
+    $overdueMinutes = $extendFromAt->diffInMinutes($extendToAt);
+    $grossDay  = intdiv($overdueMinutes, 1440);
+    $grossHour = intdiv($overdueMinutes % 1440, 60);
+
+    $grossMonthCount      = 0;
+    $grossMonthlySubtotal = 0.0;
+    if ($grossDay > 30) {
+        $grossMonthCount      = intdiv($grossDay, 30);
+        $grossMonthlySubtotal = $grossMonthCount * (float) ($priceClass?->monthly ?? 0);
+        $grossDay -= $grossMonthCount * 30;
+    }
+    $overdueGross = $computeSubtotal($grossDay, $grossHour, $grossMonthlySubtotal);
+
+    // ========= E) Discount code (A/P = RM/%, H/D = free time). Also infer HR*/DY* =========
+    $discountCode   = trim((string) $request->input('discount_code', ''));
+    $discountModel  = null;
+    $discountAmount = 0.0;
+    $freeMinutes    = 0;
+    $displayReturnAt = $extendToAt->copy(); // what we show in UI (may extend for H/D)
+
+    if ($discountCode !== '') {
+        $today = now()->toDateString();
+        $discountModel = Discount::where('code', $discountCode)
+            ->where('start_date', '<=', $today)
+            ->where(function ($q) use ($today) {
+                $q->whereNull('end_date')->orWhere('end_date', '>=', $today);
+            })
+            ->first();
+
+        $valueIn = strtoupper((string) ($discountModel->value_in ?? ''));
+        $rate    = (float) ($discountModel->rate ?? 0);
+
+        // Infer from code string if needed (e.g., HR1 / DY1)
+        if (!in_array($valueIn, ['A','P','D','H'], true) || $rate <= 0) {
+            $codeUp = strtoupper($discountCode);
+            if (preg_match('/^(HR|H)(\d{1,3})$/', $codeUp, $m)) {
+                $valueIn = 'H';
+                $rate    = (float) $m[2];
+            } elseif (preg_match('/^(DY|D)(\d{1,3})$/', $codeUp, $m)) {
+                $valueIn = 'D';
+                $rate    = (float) $m[2];
+            }
+        }
+
+        if ($discountModel || in_array($valueIn, ['A','P','D','H'], true)) {
+            if ($valueIn === 'H') {
+                // --- Free HOURS: add time to *displayed* return, but bill fewer minutes ---
+                $freeMinutes = (int) ($rate * 60);
+                // Display: extend and clamp to working hours (08:00–22:00) per vanilla behavior
+                $tentative = $extendToAt->copy()->addMinutes($freeMinutes);
+                $hhmm = (int)$tentative->format('Hi');
+
+                if ($hhmm > 2200) {
+                    // clamp to 22:00 of the tentative date
+                    $displayReturnAt = $tentative->copy()->setTime(22, 0);
+                } elseif ($hhmm < 800) {
+                    // vanilla sets back to 22:00 of the *original* return date
+                    $displayReturnAt = $extendToAt->copy()->setTime(22, 0);
+                } else {
+                    $displayReturnAt = $tentative;
+                }
+
+                // Billing: subtract free minutes from billable window
+                $billMinutes = max(0, $overdueMinutes - $freeMinutes);
+                $bDay  = intdiv($billMinutes, 1440);
+                $bHour = intdiv($billMinutes % 1440, 60);
+
+                $bMonthCount      = 0;
+                $bMonthlySubtotal = 0.0;
+                if ($bDay > 30) {
+                    $bMonthCount      = intdiv($bDay, 30);
+                    $bMonthlySubtotal = $bMonthCount * (float) ($priceClass?->monthly ?? 0);
+                    $bDay -= $bMonthCount * 30;
+                }
+                $netAfterFree  = $computeSubtotal($bDay, $bHour, $bMonthlySubtotal);
+                $discountAmount = max(0.0, $overdueGross - $netAfterFree);
+                $subtotal       = $netAfterFree;
+
+            } elseif ($valueIn === 'D') {
+                // --- Free DAYS: add days to display; billing subtracts those minutes from window ---
+                $freeMinutes = (int) ($rate * 1440);
+                $displayReturnAt = $extendToAt->copy()->addMinutes($freeMinutes);
+
+                $billMinutes = max(0, $overdueMinutes - $freeMinutes);
+                $bDay  = intdiv($billMinutes, 1440);
+                $bHour = intdiv($billMinutes % 1440, 60);
+
+                $bMonthCount      = 0;
+                $bMonthlySubtotal = 0.0;
+                if ($bDay > 30) {
+                    $bMonthCount      = intdiv($bDay, 30);
+                    $bMonthlySubtotal = $bMonthCount * (float) ($priceClass?->monthly ?? 0);
+                    $bDay -= $bMonthCount * 30;
+                }
+                $netAfterFree  = $computeSubtotal($bDay, $bHour, $bMonthlySubtotal);
+                $discountAmount = max(0.0, $overdueGross - $netAfterFree);
+                $subtotal       = $netAfterFree;
+
+            } elseif ($valueIn === 'A') {
+                $discountAmount = min($overdueGross, max(0.0, $rate));
+                $subtotal       = max(0.0, $overdueGross - $discountAmount);
+
+            } elseif ($valueIn === 'P') {
+                $discountAmount = min($overdueGross, max(0.0, $overdueGross * ($rate / 100)));
+                $subtotal       = max(0.0, $overdueGross - $discountAmount);
+
+            } else {
+                $subtotal = $overdueGross;
+            }
+        } else {
+            $subtotal = $overdueGross;
+        }
+
+        if ($request->isMethod('post') && $request->input('form_action') === 'redeem') {
+            $request->validate(['discount_code' => 'nullable|string|max:50']);
+            if ($discountModel || $freeMinutes > 0 || $discountAmount > 0) {
+                session()->flash('success', 'Discount applied.');
+            } else {
+                session()->flash('error', 'The discount code is invalid or expired.');
+            }
+            // fall through to render with updated totals/time
+        }
+    } else {
+        $subtotal = $overdueGross; // no code
+        if ($request->isMethod('post') && $request->input('form_action') === 'redeem') {
+            $request->validate(['discount_code' => 'nullable|string|max:50']);
+            session()->flash('error', 'Please enter a discount code.');
+        }
+    }
+
+    // ========= F) Header displays (Base = pickup → effective display return) =========
+    $activeReturnAt = $displayReturnAt;
+    $baseDiff = $pickupAt->diff($activeReturnAt);
+    $baseRateText       = sprintf('%d Day %d Hours',
+                              $baseDiff->d + ($baseDiff->m*30) + ($baseDiff->y*365),
+                              $baseDiff->h);
+    $pickupDateTimeText = $pickupAt->format('d/m/Y - H:i');
+    $returnDateTimeText = $activeReturnAt->format('d/m/Y - H:i');
+
+    $now    = \Carbon\Carbon::now();
+    $exceed = $now->greaterThan($activeReturnAt);
+    $extend = false;
+    $note   = $exceed ? 'Return time already exceeded.' : ($extend ? 'Return time close; consider extend.' : '');
+
+    // ========= G) Proceed (save receipt) =========
+    if ($request->isMethod('post') && $request->input('form_action') === 'proceed') {
+        $validated = $request->validate([
+            'payment'         => 'required|numeric|min:0',
+            'payment_status'  => 'required|string|in:Paid,Collect',
+            'payment_type'    => 'required|string|in:Collect,Cash,Online,Cheque,QRPay',
+            'payment_receipt' => 'required|image|mimes:jpeg,jpg,png|max:8192',
+            'discount_code'   => 'nullable|string|max:50',
+            // carry-over (not strictly required, but useful)
+            'extend_from_date'=> 'nullable|date',
+            'extend_from_time'=> 'nullable|string',
+            'extend_to_date'  => 'nullable|date',
+            'extend_to_time'  => 'nullable|string',
+            'return_date'     => 'nullable|date',
+            'return_time'     => 'nullable|string',
+        ]);
+
+        \DB::beginTransaction();
+        try {
+            $manager  = new \Intervention\Image\ImageManager(new \Intervention\Image\Drivers\Gd\Driver());
+            $file     = $request->file('payment_receipt');
+            $filename = "overdue_receipt-{$booking->id}.jpg";
+            $image    = $manager->read($file)->scale(width: 800)->toJpeg(75);
+            $path     = "overdue_images/receipts/{$filename}";
+            \Storage::disk('public')->put($path, (string)$image);
+
+            UploadData::create([
+                'booking_trans_id' => $booking->id,
+                'position'         => 'overdue_receipt',
+                'sequence'         => null,
+                'no'               => null,
+                'customer_id'      => optional($booking->customer)->id,
+                'file_name'        => $path,
+                'file_size'        => \Storage::disk('public')->size($path),
+                'file_type'        => 'jpg',
+                'status'           => 'Active',
+                'vehicle_id'       => optional($booking->vehicle)->id,
+                'modified'         => now(),
+                'mid'              => auth()->id(),
+                'created'          => now(),
+                'cid'              => auth()->id(),
+                'label'            => 'Overdue Payment Receipt',
+                'remarks'          => $validated['payment_status'].' / '.$validated['payment_type'],
+            ]);
+
+            \DB::commit();
+
+            return redirect()
+                ->route('return.vehicle', $booking->id)
+                ->with('success', 'Overdue payment recorded. Continue with return.');
+        } catch (\Throwable $e) {
+            \DB::rollBack();
+            report($e);
+            return back()->with('error', 'Failed to record overdue payment: '.$e->getMessage())->withInput();
+        }
+    }
+
+    // ========= H) Render page =========
+    return view('reservation.overdue_return', [
+        'booking'            => $booking,
+
+        'overdueType'        => $request->query('overdue_extend') ? 'extend' : 'overdue',
+
+        'baseRateText'       => $baseRateText,
+        'pickupDateTimeText' => $pickupDateTimeText,
+        'returnDateTimeText' => $returnDateTimeText,
+        'note'               => $note,
+        'exceed'             => $exceed,
+        'extend'             => $extend,
+
+        // amounts
+        'overdueGross'       => round($overdueGross, 2), // before discount
+        'discountAmount'     => round($discountAmount, 2),
+        'subtotal'           => round($subtotal, 2),     // net overdue (Grand Total)
+        'discountCode'       => $discountCode,
+
+        // carry fields (resolved values)
+        'pickupDate'         => $pickupAt->format('Y-m-d'),
+        'pickupTime'         => $pickupAt->format('H:i'),
+
+        // original planned return (for reference if needed)
+        'returnDateOriginal' => $returnAtPlanOrig->format('Y-m-d'),
+
+        // effective display return (extend-to + free time if H/D, with clamp for H)
+        'returnDate'         => $displayReturnAt->format('Y-m-d'),
+        'returnTime'         => $displayReturnAt->format('H:i'),
+
+        // explicit extend window
+        'extendFromDate'     => $extendFromAt->format('Y-m-d'),
+        'extendFromTime'     => $extendFromAt->format('H:i'),
+        'extendToDate'       => $extendToAt->format('Y-m-d'),
+        'extendToTime'       => $extendToAt->format('H:i'),
+    ]);
+}
+
+/**
+ * Safely merges separate date + time strings (or returns now()).
+ */
+private function mergeDateAndTime($date, $time): \Carbon\Carbon
+{
+    $date = (string) ($date ?? '');
+    $time = (string) ($time ?? '');
+
+    $dateHasTime = (bool) preg_match('/[ T]\d{2}:\d{2}/', $date);
+    if ($date !== '' && $dateHasTime) {
+        return \Carbon\Carbon::parse($date);
+    }
+    if ($date !== '' && $time !== '') {
+        return \Carbon\Carbon::parse(trim($date.' '.$time));
+    }
+    if ($date !== '') {
+        return \Carbon\Carbon::parse($date.' 00:00');
+    }
+    return \Carbon\Carbon::now();
+}
+
+
+/**
+ * Safely merges separate date + time strings (or returns now()).
+ */
+    // private function mergeDateAndTime($date, $time): \Carbon\Carbon
+    // {
+    //     $date = (string) ($date ?? '');
+    //     $time = (string) ($time ?? '');
+
+    //     // If $date already contains a time (or ISO 'T'), parse directly
+    //     $dateHasTime = (bool) preg_match('/[ T]\d{2}:\d{2}/', $date);
+    //     if ($date !== '' && $dateHasTime) {
+    //         return \Carbon\Carbon::parse($date);
+    //     }
+
+    //     if ($date !== '' && $time !== '') {
+    //         return \Carbon\Carbon::parse(trim($date.' '.$time));
+    //     }
+
+    //     if ($date !== '') {
+    //         return \Carbon\Carbon::parse($date.' 00:00');
+    //     }
+
+    //     return \Carbon\Carbon::now();
+    // }
+
+
+
+    // private function computeDiscountSafe(?Discount $discount, float $base): array
+    // {
+    //     if (!$discount || $base <= 0) return [0.0, null];
+
+    //     // percentage-like
+    //     $percent = null;
+    //     foreach (['percent', 'percentage', 'rate', 'discount_percent'] as $col) {
+    //         if (isset($discount->{$col}) && is_numeric($discount->{$col})) {
+    //             $percent = (float)$discount->{$col};
+    //             break;
+    //         }
+    //     }
+
+    //     // fixed-like
+    //     $fixed = null;
+    //     foreach (['amount', 'discount_amount', 'value'] as $col) {
+    //         if (isset($discount->{$col}) && is_numeric($discount->{$col})) {
+    //             $fixed = (float)$discount->{$col};
+    //             break;
+    //         }
+    //     }
+
+    //     // cap-like
+    //     $cap = null;
+    //     foreach (['max_amount', 'max_discount', 'cap'] as $col) {
+    //         if (isset($discount->{$col}) && is_numeric($discount->{$col})) {
+    //             $cap = (float)$discount->{$col};
+    //             break;
+    //         }
+    //     }
+
+    //     // type (optional)
+    //     $type = null;
+    //     foreach (['type', 'discount_type'] as $col) {
+    //         if (isset($discount->{$col}) && is_string($discount->{$col})) {
+    //             $type = strtolower((string)$discount->{$col});
+    //             break;
+    //         }
+    //     }
+
+    //     // compute
+    //     $calculated = 0.0;
+    //     if ($type && in_array($type, ['p', 'percent', 'percentage'], true) && $percent !== null) {
+    //         $calculated = $base * ($percent / 100.0);
+    //     } elseif ($type && in_array($type, ['f', 'fixed', 'amount'], true) && $fixed !== null) {
+    //         $calculated = $fixed;
+    //     } else {
+    //         if ($percent !== null) {
+    //             $calculated = $base * ($percent / 100.0);
+    //         } elseif ($fixed !== null) {
+    //             $calculated = $fixed;
+    //         } else {
+    //             $calculated = 0.0;
+    //         }
+    //     }
+
+    //     if ($cap !== null) {
+    //         $calculated = min($calculated, $cap);
+    //     }
+
+    //     $calculated = max(0.0, min($calculated, $base));
+
+    //     return [$calculated, $type];
+    // }

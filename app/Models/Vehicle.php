@@ -59,6 +59,12 @@ class Vehicle extends Model
         return $this->belongsTo(ClassModel::class, 'class_id');
     }
 
+    // Returns the PriceClass that belongs to this vehicle via its ClassModel
+    public function priceClassViaClass()
+    {
+        return optional($this->class)->priceClass;
+    }
+
     // If you have a Location model
     public function location()
     {

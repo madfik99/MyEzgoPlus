@@ -432,52 +432,52 @@
                                         @endswitch
                                     </td>
                                     <td>
-    @php
-        $couponForLink = !$errors->has('coupon') && isset($validCouponCode) ? $validCouponCode : null;
-    @endphp
+                                    @php
+                                        $couponForLink = !$errors->has('coupon') && isset($validCouponCode) ? $validCouponCode : null;
+                                    @endphp
 
-    @if (!empty($isEditing) && $isEditing)
-        <a href="{{ route('reservation.change_vehicle', [
-            'booking_id' => $bookingId,
-            'vehicle_id' => $vehicle->id,
-            'search_pickup_date' => $search_pickup_date ?? request('search_pickup_date'),
-            'search_pickup_time' => $search_pickup_time ?? request('search_pickup_time'),
-            'search_return_date' => $search_return_date ?? request('search_return_date'),
-            'search_return_time' => $search_return_time ?? request('search_return_time'),
-            'search_pickup_location' => $search_pickup_location ?? request('search_pickup_location'),
-            'search_return_location' => $search_return_location ?? request('search_return_location'),
-            'class_id' => $vehicle->class_id,
-            'coupon' => $couponForLink,
-            'agent_code' => $agent_code ?? request('agent_code'),
-            'search_vehicle' => $search_vehicle ?? request('search_vehicle'),
-            'search_driver' => $search_driver ?? request('search_driver'),
-            'klia' => $klia ?? request('klia'),
-            'opt' => $opt ?? request('opt'),
-        ]) }}" class="btn btn-sm btn-warning">
-            <i class="fa fa-exchange"></i> Change
-        </a>
-    @else
-        <a href="{{ route('reservation.counter_reservation_filter', [
-            'nric' => $nric ?? request('nric'),
-            'vehicle_id' => $vehicle->id,
-            'search_pickup_date' => $search_pickup_date ?? request('search_pickup_date'),
-            'search_pickup_time' => $search_pickup_time ?? request('search_pickup_time'),
-            'search_return_date' => $search_return_date ?? request('search_return_date'),
-            'search_return_time' => $search_return_time ?? request('search_return_time'),
-            'search_pickup_location' => $search_pickup_location ?? request('search_pickup_location'),
-            'search_return_location' => $search_return_location ?? request('search_return_location'),
-            'class_id' => $vehicle->class_id,
-            'coupon' => $couponForLink,
-            'agent_code' => $agent_code ?? request('agent_code'),
-            'search_vehicle' => $search_vehicle ?? request('search_vehicle'),
-            'search_driver' => $search_driver ?? request('search_driver'),
-            'klia' => $klia ?? request('klia'),
-            'opt' => $opt ?? request('opt'),
-        ]) }}" class="btn btn-sm btn-outline-primary">
-            <i class="fa fa-pencil"></i> Book Now
-        </a>
-    @endif
-</td>
+                                    @if (!empty($isEditing) && $isEditing)
+                                        <a href="{{ route('reservation.change_vehicle', [
+                                            'booking_id' => $bookingId,
+                                            'vehicle_id' => $vehicle->id,
+                                            'search_pickup_date' => $search_pickup_date ?? request('search_pickup_date'),
+                                            'search_pickup_time' => $search_pickup_time ?? request('search_pickup_time'),
+                                            'search_return_date' => $search_return_date ?? request('search_return_date'),
+                                            'search_return_time' => $search_return_time ?? request('search_return_time'),
+                                            'search_pickup_location' => $search_pickup_location ?? request('search_pickup_location'),
+                                            'search_return_location' => $search_return_location ?? request('search_return_location'),
+                                            'class_id' => $vehicle->class_id,
+                                            'coupon' => $couponForLink,
+                                            'agent_code' => $agent_code ?? request('agent_code'),
+                                            'search_vehicle' => $search_vehicle ?? request('search_vehicle'),
+                                            'search_driver' => $search_driver ?? request('search_driver'),
+                                            'klia' => $klia ?? request('klia'),
+                                            'opt' => $opt ?? request('opt'),
+                                        ]) }}" class="btn btn-sm btn-warning">
+                                            <i class="fa fa-exchange"></i> Change
+                                        </a>
+                                    @else
+                                        <a href="{{ route('reservation.counter_reservation_filter', [
+                                            'nric' => $nric ?? request('nric'),
+                                            'vehicle_id' => $vehicle->id,
+                                            'search_pickup_date' => $search_pickup_date ?? request('search_pickup_date'),
+                                            'search_pickup_time' => $search_pickup_time ?? request('search_pickup_time'),
+                                            'search_return_date' => $search_return_date ?? request('search_return_date'),
+                                            'search_return_time' => $search_return_time ?? request('search_return_time'),
+                                            'search_pickup_location' => $search_pickup_location ?? request('search_pickup_location'),
+                                            'search_return_location' => $search_return_location ?? request('search_return_location'),
+                                            'class_id' => $vehicle->class_id,
+                                            'coupon' => $couponForLink,
+                                            'agent_code' => $agent_code ?? request('agent_code'),
+                                            'search_vehicle' => $search_vehicle ?? request('search_vehicle'),
+                                            'search_driver' => $search_driver ?? request('search_driver'),
+                                            'klia' => $klia ?? request('klia'),
+                                            'opt' => $opt ?? request('opt'),
+                                        ]) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fa fa-pencil"></i> Book Now
+                                        </a>
+                                    @endif
+                                </td>
 
 
 

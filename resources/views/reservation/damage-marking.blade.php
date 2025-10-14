@@ -10,300 +10,302 @@
 $hotspotMap = [
                 'sedan' => [
                     'front' => [
-                        ['top' => '25.5%', 'left' => '50.5%', 'part' => 'Front Glass'],
-                        ['top' => '48.5%', 'left' => '80%', 'part' => 'Right Headlight'],
-                        ['top' => '32.5%', 'left' => '9.5%', 'part' => 'Left Side Mirror'],
-                        ['top' => '32.5%', 'left' => '90%', 'part' => 'Right Side Mirror'],
-                        ['top' => '48.5%', 'left' => '18.5%', 'part' => 'Left Headlight'],
-                        ['top' => '72%', 'left' => '50.5%', 'part' => 'Bumper'],
-                        ['top' => '43%', 'left' => '50.5%', 'part' => 'Front Hood'],
+                        ['top' => '22.5%', 'left' => '47.5%', 'part' => 'Front Glass'],
+                        ['top' => '47.5%', 'left' => '80%', 'part' => 'Right Headlight'],
+                        ['top' => '30.5%', 'left' => '5.5%', 'part' => 'Left Side Mirror'],
+                        ['top' => '30.5%', 'left' => '90%', 'part' => 'Right Side Mirror'],
+                        ['top' => '47.5%', 'left' => '15.5%', 'part' => 'Left Headlight'],
+                        ['top' => '66%', 'left' => '47.5%', 'part' => 'Bumper'],
+                        ['top' => '40%', 'left' => '47.5%', 'part' => 'Front Hood'],
                     ],
                     'left' => [
-                        ['top' => '25.5%', 'left' => '36.5%', 'part' => 'Front Glass Left'],
-                        ['top' => '47.5%', 'left' => '75.5%', 'part' => 'Rear Left Tire'],
-                        ['top' => '50%', 'left' => '45%', 'part' => 'Left Skirt'],
-                        ['top' => '35.5%', 'left' => '27%', 'part' => 'Left Front Fender'],
-                        ['top' => '47.5%', 'left' => '22.5%', 'part' => 'Front Left Tire'],
-                        ['top' => '38%', 'left' => '53.5%', 'part' => 'Left Door'],
-                        ['top' => '27.5%', 'left' => '47.5%', 'part' => 'Left Window'],
+                        ['top' => '23.5%', 'left' => '50.5%', 'part' => 'Upper Body Left'],//new
+                        ['top' => '57.5%', 'left' => '72.5%', 'part' => 'Rear Left Tire'],
+                        ['top' => '60%', 'left' => '45%', 'part' => 'Left Skirt'],
+                        ['top' => '42.5%', 'left' => '22%', 'part' => 'Left Front Fender'],
+                        ['top' => '57.5%', 'left' => '19.5%', 'part' => 'Front Left Tire'],
+                        ['top' => '45%', 'left' => '40.5%', 'part' => 'Front Left Door'], //new
+                        ['top' => '45%', 'left' => '60.5%', 'part' => 'Rear Left Door'], //new
+                        ['top' => '42.5%', 'left' => '78.5%', 'part' => 'Left Rear Fender'], //new
                     ],
                     'rear' => [
-                        ['top' => '25.5%', 'left' => '48.5%', 'part' => 'Rear Glass'],
-                        ['top' => '42%', 'left' => '82%', 'part' => 'Rear Right Headlight'],
-                        ['top' => '42%', 'left' => '17.5%', 'part' => 'Rear Left Headlight'],
-                        ['top' => '68%', 'left' => '48.5%', 'part' => 'Rear Bumper'],
-                        ['top' => '45%', 'left' => '48.5%', 'part' => 'Rear Bonnet'],
+                        ['top' => '22.5%', 'left' => '47.5%', 'part' => 'Rear Glass'],
+                        ['top' => '40%', 'left' => '80%', 'part' => 'Rear Right Headlight'],
+                        ['top' => '40%', 'left' => '15.5%', 'part' => 'Rear Left Headlight'],
+                        ['top' => '66%', 'left' => '47.5%', 'part' => 'Rear Bumper'],
+                        ['top' => '40%', 'left' => '47.5%', 'part' => 'Rear Bonnet'],
                     ],
                     'right' => [
-                        ['top' => '25.5%', 'left' => '62.5%', 'part' => 'Front Glass Right'],
-                        ['top' => '45.5%', 'left' => '76.5%', 'part' => 'Front Right Tire'],
-                        ['top' => '50%', 'left' => '55%', 'part' => 'Right Skirt'],
-                        ['top' => '35.5%', 'left' => '74%', 'part' => 'Right Front Fender'],
-                        ['top' => '45.5%', 'left' => '23.5%', 'part' => 'Rear Right Tire'],
-                        ['top' => '38%', 'left' => '46.5%', 'part' => 'Right Door'],
-                        ['top' => '27.5%', 'left' => '52.5%', 'part' => 'Right Window'],
+                        ['top' => '23.5%', 'left' => '45.5%', 'part' => 'Upper Body Right'], //new
+                        ['top' => '57.5%', 'left' => '73.5%', 'part' => 'Front Right Tire'],
+                        ['top' => '60%', 'left' => '45%', 'part' => 'Right Skirt'],
+                        ['top' => '42.5%', 'left' => '75%', 'part' => 'Right Front Fender'],
+                        ['top' => '57.5%', 'left' => '20.5%', 'part' => 'Rear Right Tire'],
+                        ['top' => '45%', 'left' => '55.5%', 'part' => 'Front Right Door'], //new
+                        ['top' => '45%', 'left' => '35.5%', 'part' => 'Rear Right Door'], //new
+                        ['top' => '42.5%', 'left' => '18.5%', 'part' => 'Right Rear Fender'], //new
                     ],
                 ],
                 'hatchback' => [
                     'front' => [
-                        ['top' => '25%', 'left' => '50%', 'part' => 'Front Glass'],
-                        ['top' => '48.5%', 'left' => '80%', 'part' => 'Right Headlight'],
-                        ['top' => '33.5%', 'left' => '9%', 'part' => 'Left Side Mirror'],
-                        ['top' => '33.5%', 'left' => '90.5%', 'part' => 'Right Side Mirror'],
-                        ['top' => '48.5%', 'left' => '17%', 'part' => 'Left Headlight'],
-                        ['top' => '73%', 'left' => '50%', 'part' => 'Bumper'],
-                        ['top' => '43%', 'left' => '50%', 'part' => 'Front Hood'],
+                        ['top' => '25%', 'left' => '48%', 'part' => 'Front Glass'],
+                        ['top' => '47%', 'left' => '80%', 'part' => 'Right Headlight'],
+                        ['top' => '31.5%', 'left' => '6%', 'part' => 'Left Side Mirror'],
+                        ['top' => '31.5%', 'left' => '88%', 'part' => 'Right Side Mirror'],
+                        ['top' => '47%', 'left' => '15%', 'part' => 'Left Headlight'],
+                        ['top' => '66%', 'left' => '48%', 'part' => 'Bumper'],
+                        ['top' => '40%', 'left' => '48%', 'part' => 'Front Hood'],
                     ],
                     'left' => [
-                        ['top' => '32.5%', 'left' => '36.5%', 'part' => 'Front Glass Left'],
-                        ['top' => '57.5%', 'left' => '80.5%', 'part' => 'Rear Left Tire'],
-                        ['top' => '60%', 'left' => '45%', 'part' => 'Left Skirt'],
-                        ['top' => '45.5%', 'left' => '23%', 'part' => 'Left Front Fender'],
-                        ['top' => '57.5%', 'left' => '20.5%', 'part' => 'Front Left Tire'],
-                        ['top' => '47.5%', 'left' => '56.5%', 'part' => 'Left Door'],
-                        ['top' => '35.5%', 'left' => '45.5%', 'part' => 'Left Window'],
+                        ['top' => '25.5%', 'left' => '55.5%', 'part' => 'Upper Body Left'],  //new
+                        ['top' => '55.5%', 'left' => '78.5%', 'part' => 'Rear Left Tire'],
+                        ['top' => '58%', 'left' => '45%', 'part' => 'Left Skirt'],
+                        ['top' => '43.5%', 'left' => '20%', 'part' => 'Left Front Fender'],
+                        ['top' => '55.5%', 'left' => '15.5%', 'part' => 'Front Left Tire'],
+                        ['top' => '45%', 'left' => '40.5%', 'part' => 'Front Left Door'], //new
+                        ['top' => '45%', 'left' => '60.5%', 'part' => 'Rear Left Door'], //new
+                        ['top' => '43.5%', 'left' => '80.5%', 'part' => 'Left Rear Fender'], //new
                     ],
                     'rear' => [
-                        ['top' => '33.5%', 'left' => '50.5%', 'part' => 'Rear Glass'],
-                        ['top' => '42.5%', 'left' => '83.5%', 'part' => 'Rear Right Headlight'],
-                        ['top' => '42.5%', 'left' => '16.5%', 'part' => 'Rear Left Headlight'],
-                        ['top' => '65%', 'left' => '50.5%', 'part' => 'Rear Bumper'],
-                        ['top' => '47.5%', 'left' => '50.5%', 'part' => 'Rear Bonnet'],
+                        ['top' => '30.5%', 'left' => '47.5%', 'part' => 'Rear Glass'],
+                        ['top' => '42.5%', 'left' => '80.5%', 'part' => 'Rear Right Headlight'],
+                        ['top' => '42.5%', 'left' => '13.5%', 'part' => 'Rear Left Headlight'],
+                        ['top' => '63%', 'left' => '47.5%', 'part' => 'Rear Bumper'],
+                        ['top' => '45%', 'left' => '47.5%', 'part' => 'Rear Bonnet'],
                     ],
                     'right' => [
-                        ['top' => '32.5%', 'left' => '60.5%', 'part' => 'Front Glass Right'],
-                        ['top' => '57.5%', 'left' => '80.5%', 'part' => 'Front Right Tire'],
-                        ['top' => '60%', 'left' => '48%', 'part' => 'Right Skirt'],
-                        ['top' => '45.5%', 'left' => '77%', 'part' => 'Right Front Fender'],
-                        ['top' => '57.5%', 'left' => '18.5%', 'part' => 'Rear Right Tire'],
-                        ['top' => '47%', 'left' => '42.5%', 'part' => 'Right Door'],
-                        ['top' => '35.5%', 'left' => '50.5%', 'part' => 'Right Window'],
+                        ['top' => '25.5%', 'left' => '38.5%', 'part' => 'Upper Body Right'], //new
+                        ['top' => '55.5%', 'left' => '76.5%', 'part' => 'Front Right Tire'],
+                        ['top' => '57%', 'left' => '45%', 'part' => 'Right Skirt'],
+                        ['top' => '43.5%', 'left' => '75%', 'part' => 'Right Front Fender'],
+                        ['top' => '55.5%', 'left' => '16.5%', 'part' => 'Rear Right Tire'],
+                        ['top' => '45%', 'left' => '50.5%', 'part' => 'Front Right Door'], //new
+                        ['top' => '45%', 'left' => '30.5%', 'part' => 'Rear Right Door'], //new
+                        ['top' => '43.5%', 'left' => '13.5%', 'part' => 'Left Rear Fender'], //new
                     ],
                     
                 ],
                 'suv' => [
                     'front' => [
-                        ['top' => '20%', 'left' => '50%', 'part' => 'Front Glass'],
-                        ['top' => '42%', 'left' => '83%', 'part' => 'Right Headlight'],
-                        ['top' => '28.5%', 'left' => '10%', 'part' => 'Left Side Mirror'],
-                        ['top' => '28.5%', 'left' => '90%', 'part' => 'Right Side Mirror'],
-                        ['top' => '42%', 'left' => '15%', 'part' => 'Left Headlight'],
-                        ['top' => '70%', 'left' => '50%', 'part' => 'Bumper'],
-                        ['top' => '35%', 'left' => '50%', 'part' => 'Front Hood'],
+                        ['top' => '20%', 'left' => '48%', 'part' => 'Front Glass'],
+                        ['top' => '40%', 'left' => '80%', 'part' => 'Right Headlight'],
+                        ['top' => '26.5%', 'left' => '8%', 'part' => 'Left Side Mirror'],
+                        ['top' => '26.5%', 'left' => '88%', 'part' => 'Right Side Mirror'],
+                        ['top' => '40%', 'left' => '15%', 'part' => 'Left Headlight'],
+                        ['top' => '68%', 'left' => '48%', 'part' => 'Bumper'],
+                        ['top' => '33%', 'left' => '48%', 'part' => 'Front Hood'],
                     ],
                     'left' => [
-                        ['top' => '22.5%', 'left' => '37.5%', 'part' => 'Front Glass Left'],
-                        ['top' => '50.5%', 'left' => '76.5%', 'part' => 'Rear Left Tire'],
-                        ['top' => '49%', 'left' => '45%', 'part' => 'Left Skirt'],
-                        ['top' => '33.5%', 'left' => '23%', 'part' => 'Left Front Fender'],
-                        ['top' => '50.5%', 'left' => '20.5%', 'part' => 'Front Left Tire'],
-                        ['top' => '38%', 'left' => '53.5%', 'part' => 'Left Door'],
-                        ['top' => '25.5%', 'left' => '45.5%', 'part' => 'Left Window'],
+                        ['top' => '20.5%', 'left' => '55.5%', 'part' => 'Upper Body Left'], //new
+                        ['top' => '60.5%', 'left' => '74.5%', 'part' => 'Rear Left Tire'],
+                        ['top' => '60%', 'left' => '45%', 'part' => 'Left Skirt'],
+                        ['top' => '40.5%', 'left' => '20%', 'part' => 'Left Front Fender'],
+                        ['top' => '60.5%', 'left' => '18.5%', 'part' => 'Front Left Tire'],
+                        ['top' => '45%', 'left' => '40.5%', 'part' => 'Front Left Door'], //new
+                        ['top' => '45%', 'left' => '60.5%', 'part' => 'Rear Left Door'], //new
+                        ['top' => '40.5%', 'left' => '80.5%', 'part' => 'Left Rear Fender'], //new
                     ],
                     'rear' => [
-                        ['top' => '30.5%', 'left' => '49.5%', 'part' => 'Rear Glass'],
-                        ['top' => '40.5%', 'left' => '82.5%', 'part' => 'Rear Right Headlight'],
-                        ['top' => '40.5%', 'left' => '17.5%', 'part' => 'Rear Left Headlight'],
-                        ['top' => '62%', 'left' => '49.5%', 'part' => 'Rear Bumper'],
-                        ['top' => '45%', 'left' => '49.5%', 'part' => 'Rear Bonnet'],
+                        ['top' => '28.5%', 'left' => '47.5%', 'part' => 'Rear Glass'],
+                        ['top' => '39.5%', 'left' => '78.5%', 'part' => 'Rear Right Headlight'],
+                        ['top' => '39.5%', 'left' => '13.5%', 'part' => 'Rear Left Headlight'],
+                        ['top' => '60%', 'left' => '47.5%', 'part' => 'Rear Bumper'],
+                        ['top' => '45%', 'left' => '47.5%', 'part' => 'Rear Bonnet'],
                     ],
                     'right' => [
-                        ['top' => '22.5%', 'left' => '62.5%', 'part' => 'Front Glass Right'],
-                        ['top' => '50.5%', 'left' => '78.5%', 'part' => 'Front Right Tire'],
-                        ['top' => '49%', 'left' => '55%', 'part' => 'Right Skirt'],
-                        ['top' => '33.5%', 'left' => '75%', 'part' => 'Right Front Fender'],
-                        ['top' => '50.5%', 'left' => '20.5%', 'part' => 'Rear Right Tire'],
-                        ['top' => '38%', 'left' => '46.5%', 'part' => 'Right Door'],
-                        ['top' => '25.5%', 'left' => '52.5%', 'part' => 'Right Window'],
+                        ['top' => '20.5%', 'left' => '37.5%', 'part' => 'Upper Body Right'], //new
+                        ['top' => '60.5%', 'left' => '78.5%', 'part' => 'Front Right Tire'],
+                        ['top' => '60%', 'left' => '50%', 'part' => 'Right Skirt'],
+                        ['top' => '40.5%', 'left' => '75%', 'part' => 'Right Front Fender'],
+                        ['top' => '60.5%', 'left' => '20.5%', 'part' => 'Rear Right Tire'],
+                        ['top' => '45%', 'left' => '60.5%', 'part' => 'Front Right Door'], //new
+                        ['top' => '45%', 'left' => '40.5%', 'part' => 'Rear Right Door'], //new
+                        ['top' => '40.5%', 'left' => '15.5%', 'part' => 'Right Rear Fender'], //new
                     ],
                     
                 ],
                 'van' => [
                     'front' => [
-                        ['top' => '20%', 'left' => '50%', 'part' => 'Front Glass'],
-                        ['top' => '47%', 'left' => '82%', 'part' => 'Right Headlight'],
-                        ['top' => '28%', 'left' => '8%', 'part' => 'Left Side Mirror'],
-                        ['top' => '28%', 'left' => '92%', 'part' => 'Right Side Mirror'],
-                        ['top' => '47%', 'left' => '17%', 'part' => 'Left Headlight'],
-                        ['top' => '75%', 'left' => '50%', 'part' => 'Bumper'],
-                        ['top' => '38%', 'left' => '50%', 'part' => 'Front Hood'],
+                        ['top' => '5%', 'left' => '48%', 'part' => 'Front Roof'], //new
+                        ['top' => '20%', 'left' => '48%', 'part' => 'Front Glass'],
+                        ['top' => '45%', 'left' => '80%', 'part' => 'Right Headlight'],
+                        ['top' => '28%', 'left' => '6%', 'part' => 'Left Side Mirror'],
+                        ['top' => '28%', 'left' => '90%', 'part' => 'Right Side Mirror'],
+                        ['top' => '45%', 'left' => '15%', 'part' => 'Left Headlight'],
+                        ['top' => '70%', 'left' => '48%', 'part' => 'Bumper'],
+                        ['top' => '38%', 'left' => '48%', 'part' => 'Front Hood'],
                     ],
                     'left' => [
-                        ['top' => '24.5%', 'left' => '28.5%', 'part' => 'Front Glass Left'],
-                        ['top' => '52.5%', 'left' => '77.5%', 'part' => 'Rear Left Tire'],
-                        ['top' => '52%', 'left' => '45%', 'part' => 'Left Skirt'],
-                        ['top' => '36.5%', 'left' => '22%', 'part' => 'Left Front Fender'],
-                        ['top' => '52.5%', 'left' => '22.5%', 'part' => 'Front Left Tire'],
-                        ['top' => '40%', 'left' => '47.5%', 'part' => 'Left Door'],
-                        ['top' => '27.5%', 'left' => '38.5%', 'part' => 'Left Window'],
+                        ['top' => '20.5%', 'left' => '55.5%', 'part' => 'Upper Body Left'], //new
+                        ['top' => '63.5%', 'left' => '75.5%', 'part' => 'Rear Left Tire'],
+                        ['top' => '64%', 'left' => '45%', 'part' => 'Left Skirt'],
+                        ['top' => '45.5%', 'left' => '20%', 'part' => 'Left Front Fender'],
+                        ['top' => '63.5%', 'left' => '20.5%', 'part' => 'Front Left Tire'],
+                        ['top' => '45%', 'left' => '35.5%', 'part' => 'Front Left Door'], //new
+                        ['top' => '45%', 'left' => '55.5%', 'part' => 'Rear Left Door'], //new
+                        ['top' => '45.5%', 'left' => '77.5%', 'part' => 'Left Rear Fender'], //new
                     ],
                     'rear' => [
-                        ['top' => '32.5%', 'left' => '50.5%', 'part' => 'Rear Glass'],
-                        ['top' => '47.5%', 'left' => '83.5%', 'part' => 'Rear Right Headlight'],
-                        ['top' => '47.5%', 'left' => '15.5%', 'part' => 'Rear Left Headlight'],
-                        ['top' => '65%', 'left' => '50.5%', 'part' => 'Rear Bumper'],
-                        ['top' => '52%', 'left' => '50.5%', 'part' => 'Rear Bonnet'],
+                        ['top' => '20.5%', 'left' => '47.5%', 'part' => 'Rear Roof'], //new
+                        ['top' => '30.5%', 'left' => '47.5%', 'part' => 'Rear Glass'],
+                        ['top' => '45.5%', 'left' => '80.5%', 'part' => 'Rear Right Headlight'],
+                        ['top' => '45.5%', 'left' => '12.5%', 'part' => 'Rear Left Headlight'],
+                        ['top' => '63%', 'left' => '47.5%', 'part' => 'Rear Bumper'],
+                        ['top' => '45%', 'left' => '47.5%', 'part' => 'Rear Bonnet'],
                     ],
                     'right' => [
-                        ['top' => '24.5%', 'left' => '72.5%', 'part' => 'Front Glass Right'],
-                        ['top' => '52.5%', 'left' => '77.5%', 'part' => 'Front Right Tire'],
-                        ['top' => '52%', 'left' => '58%', 'part' => 'Right Skirt'],
-                        ['top' => '36.5%', 'left' => '77%', 'part' => 'Right Front Fender'],
-                        ['top' => '52.5%', 'left' => '22.5%', 'part' => 'Rear Right Tire'],
-                        ['top' => '40%', 'left' => '52.5%', 'part' => 'Right Door'],
-                        ['top' => '27.5%', 'left' => '60.5%', 'part' => 'Right Window'],
+                        ['top' => '20.5%', 'left' => '38.5%', 'part' => 'Upper Body Right'], //new
+                        ['top' => '63.5%', 'left' => '75.5%', 'part' => 'Front Right Tire'],
+                        ['top' => '64%', 'left' => '50%', 'part' => 'Right Skirt'],
+                        ['top' => '45.5%', 'left' => '77%', 'part' => 'Right Front Fender'],
+                        ['top' => '63.5%', 'left' => '20.5%', 'part' => 'Rear Right Tire'],
+                        ['top' => '45%', 'left' => '60.5%', 'part' => 'Front Right Door'], //new
+                        ['top' => '45%', 'left' => '35.5%', 'part' => 'Rear Right Door'], //new
+                        ['top' => '45.5%', 'left' => '18.5%', 'part' => 'Right Rear Fender'], //new
                     ],
                     
                 ],
                 'mpv' => [
                     'front' => [
-                        ['top' => '28%', 'left' => '50%', 'part' => 'Front Glass'],
-                        ['top' => '46%', 'left' => '83%', 'part' => 'Right Headlight'],
-                        ['top' => '34%', 'left' => '10%', 'part' => 'Left Side Mirror'],
-                        ['top' => '34%', 'left' => '90%', 'part' => 'Right Side Mirror'],
-                        ['top' => '46%', 'left' => '16%', 'part' => 'Left Headlight'],
-                        ['top' => '68%', 'left' => '50%', 'part' => 'Bumper'],
-                        ['top' => '41%', 'left' => '50%', 'part' => 'Front Hood'],
+                        ['top' => '25%', 'left' => '48%', 'part' => 'Front Glass'],
+                        ['top' => '45%', 'left' => '80%', 'part' => 'Right Headlight'],
+                        ['top' => '33%', 'left' => '6%', 'part' => 'Left Side Mirror'],
+                        ['top' => '33%', 'left' => '88%', 'part' => 'Right Side Mirror'],
+                        ['top' => '45%', 'left' => '15%', 'part' => 'Left Headlight'],
+                        ['top' => '64%', 'left' => '48%', 'part' => 'Bumper'],
+                        ['top' => '40%', 'left' => '48%', 'part' => 'Front Hood'],
                     ],
                     'left' => [
-                        ['top' => '22.5%', 'left' => '29.5%', 'part' => 'Front Glass Left'],
-                        ['top' => '50.5%', 'left' => '74.5%', 'part' => 'Rear Left Tire'],
-                        ['top' => '50%', 'left' => '40%', 'part' => 'Left Skirt'],
-                        ['top' => '36.5%', 'left' => '23%', 'part' => 'Left Front Fender'],
-                        ['top' => '50.5%', 'left' => '20.5%', 'part' => 'Front Left Tire'],
-                        ['top' => '38%', 'left' => '46.5%', 'part' => 'Left Door'],
-                        ['top' => '25.5%', 'left' => '40.5%', 'part' => 'Left Window'],
+                        ['top' => '19.5%', 'left' => '50.5%', 'part' => 'Upper Body Left'], //new
+                        ['top' => '60.5%', 'left' => '71.5%', 'part' => 'Rear Left Tire'],
+                        ['top' => '62%', 'left' => '45%', 'part' => 'Left Skirt'],
+                        ['top' => '45.5%', 'left' => '18%', 'part' => 'Left Front Fender'],
+                        ['top' => '60.5%', 'left' => '17.5%', 'part' => 'Front Left Tire'],
+                        ['top' => '48%', 'left' => '35.5%', 'part' => 'Front Left Door'], //new
+                        ['top' => '48%', 'left' => '60.5%', 'part' => 'Rear Left Door'], //new
+                        ['top' => '45.5%', 'left' => '80.5%', 'part' => 'Left Rear Fender'], //new
                     ],
                     'rear' => [
-                        ['top' => '28.5%', 'left' => '50.5%', 'part' => 'Rear Glass'],
-                        ['top' => '45.5%', 'left' => '85.5%', 'part' => 'Rear Right Headlight'],
-                        ['top' => '45.5%', 'left' => '14.5%', 'part' => 'Rear Left Headlight'],
-                        ['top' => '66%', 'left' => '50.5%', 'part' => 'Rear Bumper'],
-                        ['top' => '56%', 'left' => '50.5%', 'part' => 'Rear Bonnet'],
+                        ['top' => '28.5%', 'left' => '47.5%', 'part' => 'Rear Glass'],
+                        ['top' => '42.5%', 'left' => '80.5%', 'part' => 'Rear Right Headlight'],
+                        ['top' => '42.5%', 'left' => '12.5%', 'part' => 'Rear Left Headlight'],
+                        ['top' => '63%', 'left' => '47.5%', 'part' => 'Rear Bumper'],
+                        ['top' => '53%', 'left' => '47.5%', 'part' => 'Rear Bonnet'],
                     ],
                     'right' => [
-                        ['top' => '22.5%', 'left' => '68.5%', 'part' => 'Front Glass Right'],
-                        ['top' => '50.5%', 'left' => '79.5%', 'part' => 'Front Right Tire'],
-                        ['top' => '50%', 'left' => '60%', 'part' => 'Right Skirt'],
-                        ['top' => '36.5%', 'left' => '80%', 'part' => 'Right Front Fender'],
-                        ['top' => '50.5%', 'left' => '25.5%', 'part' => 'Rear Right Tire'],
-                        ['top' => '38%', 'left' => '52.5%', 'part' => 'Right Door'],
-                        ['top' => '25.5%', 'left' => '60.5%', 'part' => 'Right Window'],
+                        ['top' => '19.5%', 'left' => '45.5%', 'part' => 'Upper Body Right'], //new
+                        ['top' => '60.5%', 'left' => '77.5%', 'part' => 'Front Right Tire'],
+                        ['top' => '62%', 'left' => '50%', 'part' => 'Right Skirt'],
+                        ['top' => '45.5%', 'left' => '77%', 'part' => 'Right Front Fender'],
+                        ['top' => '60.5%', 'left' => '23.5%', 'part' => 'Rear Right Tire'],
+                        ['top' => '48%', 'left' => '60.5%', 'part' => 'Front Right Door'], //new
+                        ['top' => '48%', 'left' => '35.5%', 'part' => 'Rear Right Door'], //new
+                        ['top' => '45.5%', 'left' => '18.5%', 'part' => 'Right Rear Fender'], //new
                     ],
                     
                 ],
                 
             ];
-
 @endphp
 
-{{-- Debug info --}}
-<div class="mb-3 mt-3">
-    <h5>Layout Type: <code>{{ $layoutType }}</code></h5>
-    <p>Vehicle: {{ $pickup->vehicle->class->class_name ?? 'N/A' }}</p>
-</div>
-<div class="btn-group mb-3 mt-3">
-        <a href="{{ route('reservation.view', $pickup->id) }}" class="btn btn-secondary">Back</a>
-        
-</div>
+<div class="card shadow-sm">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Hotspot Damage Marking</h5>
+    <a href="{{ route('reservation.view', $pickup->id) }}" class="btn btn-secondary">Back</a>
+  </div>
 
-{{-- Loop through all 4 layout sides --}}
-@php
-    $sides = ['front' => 'Front Layout', 'left' => 'Left Side Layout', 'rear' => 'Rear Layout', 'right' => 'Right Side Layout'];
-    $sideGroups = array_chunk(array_keys($sides), 2); // for 2 columns
-@endphp
 
-<div class="row gy-4">
+  <div class="card-body">
+    {{-- Debug info --}}
+    {{-- <div class="mb-3 mt-3">
+      <h5>Layout Type: <code>{{ $layoutType }}</code></h5>
+      <p>Vehicle: {{ $pickup->vehicle->class->class_name ?? 'N/A' }}</p>
+    </div> --}}
+
+    @php
+      $sides = [
+          'front' => 'Front Layout',
+          'left'  => 'Left Side Layout',
+          'rear'  => 'Rear Layout',
+          'right' => 'Right Side Layout'
+      ];
+      $sideGroups = array_chunk(array_keys($sides), 2); // 2 per row
+    @endphp
+
     @foreach($sideGroups as $group)
-    <div class="row gy-4">
+      <div class="row gy-4 mb-4">
         @foreach($group as $side)
-            <div class="col-12 col-md-6 d-flex">
-                <div class="card w-100 h-100 shadow-sm">
-                    <div class="card-header">
-                        <h5 class="mt-2">{{ $sides[$side] }}</h5>
-                    </div>
-                    <div class="card-body d-flex flex-column">
-                        <p class="text-muted">Tap a hotspot to view uploaded damage photo.</p>
+          <div class="col-12 col-md-6 d-flex">
+            <div class="card w-100 h-100">
+              <div class="card-header">
+                <h5 class="mt-2">{{ $sides[$side] }}</h5>
+              </div>
 
-                        @php
-                            $imageName = in_array($side, ['left', 'right']) ? "{$side}_side_layout.png" : "{$side}_layout.png";
-                        @endphp
+              <div class="card-body d-flex flex-column align-items-start">
+                <p class="text-muted">Tap a hotspot to view uploaded damage photo.</p>
 
-                        {{-- Layout Image with Hotspots --}}
-                        <div class="position-relative mx-auto mb-4" style="height: 300px; max-width: 100%; overflow: hidden;">
-                            <img src="{{ asset('storage/layout/' . $layoutType . '/' . $imageName) }}"
-                                 alt="{{ $sides[$side] }}"
-                                 class="img-fluid w-100 border rounded object-fit-cover"
-                                 style="max-height: 300px;">
+                @php
+                  $imageName = in_array($side, ['left', 'right'])
+                      ? "{$side}_side_layout.png"
+                      : "{$side}_layout.png";
+                @endphp
 
-                            @foreach($hotspotMap[$layoutType][$side] ?? [] as $hotspot)
-                                @php
-                                    $part = $hotspot['part'];
-                                    $upload = $damageUploads->get($part)?->first();
-                                @endphp
+                {{-- Layout Image with Hotspots --}}
+                <div class="position-relative layout-stage-block my-3"
+                     style="height: 350px; max-width: 600px; margin: auto; overflow: hidden;">
+                    <img src="{{ asset('storage/layout/' . $layoutType . '/' . $imageName) }}" alt="Car Layout" class="img-fluid h-100 w-100 object-fit-cover">
 
-                                {{-- Hotspot Button --}}
-                                <div class="position-absolute"
-                                     style="top: {{ $hotspot['top'] }};
-                                            left: {{ $hotspot['left'] }};
-                                            transform: translate(-50%, -50%);
-                                            z-index: 5;">
-                                    <button type="button"
-                                            class="btn btn-outline-primary rounded-circle"
-                                            style="width: 14px; height: 14px; padding: 0; font-size: 9px;"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#viewDamageModal"
-                                            data-part="{{ $part }}">●</button>
-                                </div>
 
-                                {{-- Floating Thumbnail on Layout --}}
-                                {{-- @if($upload)
-                                    <div class="position-absolute"
-                                         style="top: calc({{ $hotspot['top'] }} + 6px);
-                                                left: calc({{ $hotspot['left'] }} + 6px);
-                                                z-index: 10;">
-                                        <img src="{{ asset('storage/' . $upload->file_name) }}"
-                                             alt="{{ $part }}"
-                                             class="img-thumbnail shadow"
-                                             style="max-width: 60px; max-height: 60px;">
-                                    </div>
-                                @endif --}}
-                            @endforeach
-                        </div>
+                  @foreach($hotspotMap[$layoutType][$side] ?? [] as $hotspot)
+                    @php
+                      $part   = $hotspot['part'];
+                      $upload = $damageUploads->get($part)?->first();
+                    @endphp
+                    <button type="button"
+                            class="position-absolute btn btn-outline-primary rounded-circle"
+                            style="top: {{ $hotspot['top'] }}; left: {{ $hotspot['left'] }}; width: 16px; height: 16px; padding: 0; font-size: 10px;"
+                            data-bs-toggle="modal"
+                            data-bs-target="#viewDamageModal"
+                            data-part="{{ $part }}">●</button>
+                  @endforeach
 
-                        {{-- Damage Image Cards (3 per row) --}}
-                        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3 px-2">
-                            @foreach($hotspotMap[$layoutType][$side] ?? [] as $hotspot)
-                                @php
-                                    $part = $hotspot['part'];
-                                    $upload = $damageUploads->get($part)?->first();
-                                @endphp
-                                @if($upload)
-                                    <div class="col">
-                                        <div class="card h-100 shadow-sm border-0 bg-light">
-                                            <img src="{{ asset('storage/' . $upload->file_name) }}"
-                                                 class="card-img-top"
-                                                 alt="{{ $upload->label }}"
-                                                 style="height: 110px; object-fit: cover;">
-                                            <div class="card-body p-2">
-                                                <h6 class="card-title mb-1 text-primary small">{{ $upload->label }}</h6>
-                                                <p class="card-text text-muted small mb-0">
-                                                    {{ $upload->remarks ?: 'No remarks.' }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endif
-                            @endforeach
-                        </div>
-
-                    </div>
                 </div>
+
+                {{-- Damage Image Cards --}}
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3 preview-grid w-100 mt-3">
+                  @foreach($hotspotMap[$layoutType][$side] ?? [] as $hotspot)
+                    @php
+                      $part   = $hotspot['part'];
+                      $upload = $damageUploads->get($part)?->first();
+                    @endphp
+                    @if($upload)
+                      <div class="col">
+                        <div class="card h-100 shadow-sm border-0 bg-light">
+                          <img src="{{ asset('storage/' . $upload->file_name) }}"
+                               class="card-img-top"
+                               alt="{{ $upload->label }}"
+                               style="height: 110px; object-fit: cover;">
+                          <div class="card-body p-2">
+                            <h6 class="card-title mb-1 text-primary small">{{ $upload->label }}</h6>
+                            <p class="card-text text-muted small mb-0">
+                              {{ $upload->remarks ?: 'No remarks.' }}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    @endif
+                  @endforeach
+                </div>
+
+              </div>
             </div>
+          </div>
         @endforeach
-    </div>
-@endforeach
+      </div>
+    @endforeach
+  </div>
 </div>
+
 
 
 
@@ -323,6 +325,20 @@ $hotspotMap = [
     </div>
   </div>
 </div>
+<style>
+  /* Ensures a neat gap below the layout image and a subtle divider above previews */
+  .layout-stage-block {
+    margin-bottom: 1.25rem;              /* gap under the layout image */
+  }
+  .preview-grid {
+    margin-top: .75rem;                  /* extra spacing */
+    padding-top: .75rem;
+    border-top: 1px solid rgba(255,255,255,.08); /* subtle separator on dark theme */
+  }
+
+  /* Optional: make sure the previews always span full width of card body */
+  .preview-grid.w-100 { width: 100% !important; }
+</style>
 
 {{-- Modal JS --}}
 <script>
