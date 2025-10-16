@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+
 use Illuminate\Database\Eloquent\Model;
 
 class Extend extends Model
@@ -49,5 +50,9 @@ class Extend extends Model
     public function vehicle()
     {
         return $this->belongsTo(Vehicle::class);
+    }
+    public function sale()
+    {
+        return $this->belongsTo(\App\Models\Sale::class, 'sale_id');
     }
 }

@@ -10,98 +10,149 @@
 
 @section('content')
 
+<style>
+  /* Keep button text from wrapping mid-word on tiny screens */
+  .btn-toolbar .btn { white-space: nowrap; }
+</style>
 
-<div class="btn-group mb-3 mt-3">
 
-    {{-- Agreement Button --}}
-    <a href="{{ route('agreement.generate', $booking->id) }}" target="_blank">
-        <button class="btn btn-secondary" type="button">
-            <i class="fa fa-clipboard">&nbsp;</i>Agreement
-        </button>
+ @php $currentDate = \Carbon\Carbon::now()->format('Y-m-d'); @endphp
+
+<div class="btn-toolbar w-100 mb-3 mt-3 flex-column flex-md-row align-items-stretch gap-2 overflow-auto" role="toolbar">
+  {{-- LEFT SIDE (wraps nicely) --}}
+  <div class="btn-group flex-wrap" role="group">
+    {{-- Agreement --}}
+    <a href="{{ route('agreement.generate', $booking->id) }}" target="_blank" class="btn btn-secondary">
+      <i class="fa fa-clipboard"></i>
+      <span class="d-none d-sm-inline">&nbsp;Agreement</span>
     </a>
 
-    @php
-        $currentDate = \Carbon\Carbon::now()->format('Y-m-d');
-    @endphp
-
     @if ($booking->available === 'Booked')
-        {{-- Booking Receipt --}}
-        <a href="{{ route('booking_receipt.generate', $booking->id) }}" target="_blank">
-            <button class="btn btn-secondary" type="button">
-                <i class="fa fa-file">&nbsp;</i>Booking Receipt
-            </button>
-        </a>
+      {{-- Booking Receipt --}}
+      <a href="{{ route('booking_receipt.generate', $booking->id) }}" target="_blank" class="btn btn-secondary">
+        <i class="fa fa-file"></i>
+        <span class="d-none d-sm-inline">&nbsp;Booking Receipt</span>
+      </a>
 
-        {{-- Pickup Button --}}
-        <button 
-            class="btn btn-secondary"
-            type="button"
-            data-bs-toggle="modal"
-            data-bs-target="#pickupModal"
-            @if (empty($license_no) || ($license_exp ?? '') < $currentDate || $customer_status !== 'A') disabled @endif>
-            <i class="fa fa-external-link">&nbsp;</i>Pickup
-        </button>
+      {{-- Pickup --}}
+      <button class="btn btn-secondary" type="button"
+              data-bs-toggle="modal" data-bs-target="#pickupModal"
+              @if (empty($license_no) || ($license_exp ?? '') < $currentDate || $customer_status !== 'A') disabled @endif>
+        <i class="fa fa-external-link"></i>
+        <span class="d-none d-sm-inline">&nbsp;Pickup</span>
+      </button>
 
+      {{-- Pre-inspection --}}
+      <button class="btn btn-secondary" type="button"
+              data-bs-toggle="modal" data-bs-target=".bs-inspect-modal-lg"
+              @if (empty($license_no) || ($license_exp ?? '') < $currentDate || $customer_status !== 'A') disabled @endif>
+        <i class="fa fa-external-link"></i>
+        <span class="d-none d-sm-inline">&nbsp;Pre-inspection</span>
+      </button>
 
-        {{-- Pre-inspection Button --}}
-        <button 
-            class="btn btn-secondary"
-            type="button"
-            data-bs-toggle="modal"
-            data-bs-target=".bs-inspect-modal-lg"
-            @if (empty($license_no) || ($license_exp ?? '') < $currentDate || $customer_status !== 'A') disabled @endif>
-            <i class="fa fa-external-link">&nbsp;</i>Pre-inspection
-        </button>
-
-        {{-- Tooltip for restriction --}}
-        @if (empty($license_no) || ($license_exp ?? '') < $currentDate || $customer_status !== 'A')
-            <abbr title="Customer's details are incomplete or not approved">
-                <i class="fa fa-info-circle text-danger"></i>
-            </abbr>
-        @endif
+      {{-- Restriction tooltip --}}
+      @if (empty($license_no) || ($license_exp ?? '') < $currentDate || $customer_status !== 'A')
+        <abbr title="Customer's details are incomplete or not approved" class="ms-1">
+          <i class="fa fa-info-circle text-danger"></i>
+        </abbr>
+      @endif
     @endif
 
     @if (in_array($booking->available, ['Out', 'Extend']))
-        {{-- @if ($excess === 'true' || $excess === 'extend')
-            Return with extension modal 
-            <button 
-                class="btn btn-secondary"
-                type="button"
-                data-bs-toggle="modal"
-                data-bs-target=".bs-return-extend-modal-lg">
-                <i class="fa fa-external-link">&nbsp;</i>Return
+    
+        {{-- Return --}}
+        @if ($excess === "true" || $excess === "extend")
+            <button class="btn btn-secondary" type="button"
+                    data-bs-toggle="modal" data-bs-target=".bs-return-extend-modal-lg">
+                <i class="fa fa-level-up"></i>
+                <span class="d-none d-sm-inline">&nbsp;Return</span>
             </button>
-        @else--}}
-            {{-- Normal Return 
-            <button 
-                class="btn btn-secondary"
-                type="button"
-                data-bs-toggle="modal"
-                data-bs-target=".bs-return-modal-lg">
-                <i class="fa fa-level-up">&nbsp;</i>Return
+        @else
+            <button class="btn btn-secondary" type="button"
+                    data-bs-toggle="modal" data-bs-target=".bs-return-modal-lg">
+                <i class="fa fa-level-up"></i>
+                <span class="d-none d-sm-inline">&nbsp;Return</span>
             </button>
-        @endif--}}
+        @endif
 
-        {{-- Extend Button --}}
-        <button 
-            class="btn btn-secondary"
-            type="button"
-            data-bs-toggle="modal"
-            data-bs-target=".bs-extend-modal-lg">
-            <i class="fa fa-external-link">&nbsp;</i>Extend
+        {{-- Extend --}}
+        <button class="btn btn-secondary" type="button"
+                data-bs-toggle="modal" data-bs-target=".bs-extend-modal-lg">
+            <i class="fa fa-external-link"></i>
+            <span class="d-none d-sm-inline">&nbsp;Extend</span>
         </button>
+
     @endif
+
 
     @if ($booking->available === 'Park')
-        {{-- Return Receipt --}}
-        <a href="{{ url('returnreceipt?booking_id=' . $booking->id) }}">
-            <button class="btn btn-secondary" type="button">
-                <i class="fa fa-file">&nbsp;</i>Return Receipt
-            </button>
-        </a>
-    @endif
+      {{-- Return Receipt --}}
+      <a href="{{ route('return_receipt.generate', $booking->id) }}" target="_blank" class="btn btn-secondary">
+        <i class="fa fa-file"></i>
+        <span class="d-none d-sm-inline">&nbsp;Return Receipt</span>
+      </a>
 
+    @endif
+  </div>
+
+  {{-- RIGHT SIDE: dropdown on mobile, buttons on md+ --}}
+  <div class="ms-md-auto d-flex gap-2">
+    {{-- Mobile: More menu --}}
+    <div class="dropdown d-inline-block d-md-none">
+      <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fa fa-ellipsis-h"></i>
+        <span class="d-none d-sm-inline">&nbsp;More</span>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li>
+          <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editCustomerModal">
+            @if (empty($license_no) || ((($license_exp ?? '') < $currentDate) && ($booking->available !== 'Park')))
+              <i class="fa fa-bell" style="color:#f95e5e"></i>&nbsp;
+            @endif
+            <i class="fa fa-edit"></i>&nbsp;
+          </a>
+        </li>
+        <li>
+          <a class="dropdown-item" href="">
+            <i class="fa fa-trash"></i>&nbsp;
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    {{-- Desktop: show full buttons --}}
+    {{-- <div class="btn-group d-none d-md-inline-flex" role="group">
+      <button class="btn btn-secondary" type="button" data-bs-toggle="modal" data-bs-target="#editCustomerModal">
+        @if (empty($license_no) || ((($license_exp ?? '') < $currentDate) && ($booking->available !== 'Park')))
+          <i class="fa fa-bell faa-ring animated" style="font-size:16px;color:#f95e5e"></i>
+        @endif
+        <i class="fa fa-edit"></i>&nbsp;Edit Customer & Payment
+      </button>
+
+      <a href="" class="btn btn-secondary">
+        <i class="fa fa-trash"></i>&nbsp;Delete
+      </a>
+    </div> --}}
+    {{-- Desktop: show full buttons --}}
+    <div class="btn-group d-none d-md-inline-flex" role="group">
+    <button class="btn btn-secondary" type="button" data-bs-toggle="modal" data-bs-target="#editCustomerModal">
+        @if (empty($license_no) || ((($license_exp ?? '') < $currentDate) && ($booking->available !== 'Park')))
+        <i class="fa fa-bell faa-ring animated" style="font-size:16px;color:#f95e5e"></i>
+        @endif
+        <i class="fa fa-edit"></i>&nbsp;Edit Customer & Payment
+    </button>
+
+    <a href="{{ route('delete.request.create', ['booking' => $booking->id, 'agreement_no' => $booking->agreement_no]) }}"
+        onclick="return confirm('Please provide reason of deleting this agreement');"
+        class="btn btn-secondary">
+        <i class="fa fa-trash"></i>&nbsp;Delete
+    </a>
+    </div>
+
+  </div>
 </div>
+
+
 
 {{-- License Warning --}}
 @if (empty($license_no) || (($license_exp) < $currentDate && $booking->available !== 'Park'))
@@ -473,10 +524,25 @@
                                 <option {{ ($booking->refund_dep_payment ?? '') == 'Cash' ? 'selected' : '' }}>Cash</option>
                                 <option {{ ($booking->refund_dep_payment ?? '') == 'Online' ? 'selected' : '' }}>Online</option>
                                 <option {{ ($booking->refund_dep_payment ?? '') == 'Card' ? 'selected' : '' }}>Card</option>
+                                <option {{ ($booking->refund_dep_payment ?? '') == 'QRPay' ? 'selected' : '' }}>QRPay</option>
                             </select>
                         </div>
                     </div>
                     {{-- ... Add other sale fields here, all with disabled ... --}}
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Payment Status (RM)</div>
+                            <div class="col-md-6">
+                                <input type="text" name="payment_status" class="form-control" id="payment_status"
+                                    value="{{ $booking->payment_status ?? '0.00' }}" disabled>
+                            </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Discount (RM)</div>
+                            <div class="col-md-6">
+                                <input type="number" name="discount_amount" class="form-control" id="discount_amount"
+                                    value="{{ $booking->discount_amount ?? '0.00' }}" disabled>
+                            </div>
+                    </div>
                     <div class="row mb-3">
                         <div class="col-md-3 fw-bold">CDW Amount (RM)</div>
                             <div class="col-md-6">
@@ -491,13 +557,7 @@
                                     value="{{ number_format($cdwId),2 }}" disabled>
                             </div>
                     </div>
-                    <div class="row mb-3">
-                        <div class="col-md-3 fw-bold">Discount (RM)</div>
-                            <div class="col-md-6">
-                                <input type="number" name="discount_amount" class="form-control" id="discount_amount"
-                                    value="{{ $booking->discount_amount ?? '0.00' }}" disabled>
-                            </div>
-                    </div>
+                    
                     <div class="row mb-3">
                         <div class="col-md-3 fw-bold">Sale (RM)</div>
                             <div class="col-md-6">
@@ -512,6 +572,31 @@
                                     value="{{ $booking->balance ?? '0.00' }}" disabled>
                             </div>
                     </div>
+
+                    {{-- Full Payment Receipt (show only if exists) --}}
+                    @if($pickup_receipt)
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Full Payment Receipt</div>
+                        <div class="col-md-6">
+                            <div class="border p-3 rounded bg-light text-center mb-4" style="min-height:170px;">
+                                
+                                {{-- Date + Payment Type inline --}}
+                                <div class="d-flex justify-content-center align-items-center mb-2 text-muted small">
+                                    <span>{{ \Carbon\Carbon::parse($pickup_receipt->created)->format('d-m-Y h:i:s a') }}</span>
+                                    <span class="mx-2">|</span>
+                                    <span>Payment Type: <strong>{{ $booking->payment_type ?? '-' }}</strong></span>
+                                </div>
+
+                                {{-- Receipt Image --}}
+                                <img src="{{ asset('storage/pickup_images/pickup_receipt/' . $pickup_receipt->file_name) }}?nocache={{ time() }}"
+                                    alt="Full Payment Receipt"
+                                    class="img-fluid rounded shadow-sm"
+                                    style="max-width:220px; border:3px solid #ddd; cursor:pointer;"
+                                    onclick="showModal(this)">
+                            </div>
+                        </div>
+                    </div>
+                    @endif
             </div>
         </div>
 </div>
@@ -717,15 +802,29 @@
 
             <h6 class="mb-2 text-primary">Return</h6>
             <div class="row">
-                @forelse($returnInteriorImages as $index => $image)
-                    <div class="col-md-3 mb-3">
-                        <img src="{{ asset('assets/img/car_state/return/interior/' . $image) }}?nocache={{ time() }}"
-                             class="img-fluid rounded border shadow-sm image-thumb"
-                             alt="Return Interior Image {{ $index + 1 }}"
-                             data-bs-toggle="modal" data-bs-target="#imageModal"
-                             data-bs-image="{{ asset('assets/img/car_state/return/interior/' . $image) }}">
-                    </div>
-                @empty
+                @php
+                    $interiorLabels = [
+                        '1' => 'Dashboard & Windscreen',
+                        '2' => 'First Row Seat',
+                        '3' => 'Second Row Seat',
+                        '4' => 'Third Row Seat (Optional)',
+                        '5' => 'Fourth Row Seat (Optional)',
+                    ];
+                @endphp
+
+
+                @forelse($returnInteriorImages as $image)
+                    @php
+                        $label = $interiorLabels[$image->no] ?? 'Pickup Interior Image';
+                    @endphp
+                        <div class="col-md-3 mb-3">
+                            <img src="{{ asset('storage/' . $image->file_name) }}?nocache={{ time() }}"
+                                class="img-fluid rounded border shadow-sm image-thumb"
+                                alt="{{ $label }}"
+                                data-bs-toggle="modal" data-bs-target="#imageModal"
+                                data-bs-image="{{ asset('storage/' . $image->file_name) }}">
+                        </div>
+                    @empty
                     <div class="col-12"><i>Interior image for return is not yet available</i></div>
                 @endforelse
             </div>
@@ -787,25 +886,41 @@
                     $returnExteriorImages = \App\Models\UploadData::where('booking_trans_id', $booking->id)
                         ->where('position', 'return_exterior')
                         ->where('file_size', '!=', 0)
-                        ->latest('id')
-                        ->pluck('file_name');
+                        ->orderBy('no')
+                        ->get(['file_name', 'no']);
+
+                    $exteriorLabels = [
+                        1 => 'Front Left',
+                        2 => 'Front Right',
+                        3 => 'Rear Left',
+                        4 => 'Rear Right',
+                        5 => 'Rear',
+                        6 => 'Front with Customer',
+                        7 => 'Front View',
+                    ];
                 @endphp
 
-                @forelse($returnExteriorImages as $index => $image)
+                @forelse($returnExteriorImages as $image)
+                    @php
+                        $label = $exteriorLabels[$image->no] ?? 'Pickup Exterior Image';
+                    @endphp
                     <div class="col-md-3 mb-3">
-                        <img src="{{ asset('assets/img/car_state/return/exterior/' . $image) }}?nocache={{ time() }}"
+                        <img src="{{ asset('storage/' . $image->file_name) }}?nocache={{ time() }}"
                             class="img-fluid rounded border shadow-sm image-thumb"
-                            alt="Return Exterior Image {{ $index + 1 }}"
+                            alt="{{ $label }}"
                             data-bs-toggle="modal" data-bs-target="#imageModal"
-                            data-bs-image="{{ asset('assets/img/car_state/return/exterior/' . $image) }}">
+                            data-bs-image="{{ asset('storage/' . $image->file_name) }}">
                     </div>
                 @empty
+
                     <div class="col-12"><i>Exterior return image is not yet available</i></div>
                 @endforelse
             </div>
         </div>
     </div>
 </div>
+
+
 
 {{-- End Car Exterior Image State Section --}}
 
@@ -942,18 +1057,40 @@
                                 RM {{ number_format($extend->payment, 2) }}
                                 @if($receipt)
                                     <br>
-                                    <button class="btn btn-sm btn-primary mt-1" onclick="openReceiptModal('{{ asset('assets/img/receipt/extend/'.$receipt->file_name) }}', 'Extend {{ $index + 1 }}')">
+                                    <button class="btn btn-sm btn-primary mt-1" onclick="openReceiptModal('{{ asset('storage/assets/img/receipt/extend/'.$receipt->file_name) }}', 'Extend {{ $index + 1 }}')">
                                         <i class="fa fa-print"></i> Receipt
                                     </button>
                                 @endif
                             </td>
                             <td>
-                                <a href="{{ url('extendreceipt?booking_id='.$booking->id.'&extend_id='.$extend->id) }}" class="btn btn-sm btn-info"><i class="fa fa-print"></i> Print</a>
-                                @if(in_array($occupation, ['Admin', 'Manager', 'Sales Executive','company']))
-                                    <a href="{{ url('extend_edit?extend_id='.$extend->id) }}" class="btn btn-sm btn-warning"><i class="fa fa-external-link"></i> Edit</a>
-                                    <a href="{{ url('delete_extend?extend_id='.$extend->id.'&confirm=pending&booking_id='.$booking->id) }}" class="btn btn-sm btn-danger"><i class="fa fa-trash-o"></i></a>
-                                @endif
+                            <a
+                                href="{{ route('extends.receipts.print', ['booking' => $booking->id, 'extend' => $extend->id]) }}"
+                                target="_blank" rel="noopener"
+                                class="btn btn-sm btn-info"
+                            >
+                                <i class="fa fa-print"></i> Print
+                            </a>
+
+                            @if(in_array($occupation, ['Admin', 'Manager', 'Sales Executive','company']))
+                                <a href="{{ route('extends.edit', ['extend' => $extend->id]) }}" class="btn btn-sm btn-warning">
+                                <i class="fa fa-external-link"></i> Edit
+                                </a>
+
+                                <form
+                                action="{{ route('extends.destroy', ['extend' => $extend->id]) }}"
+                                method="POST"
+                                class="d-inline"
+                                onsubmit="return confirm('Are you sure you want to delete this extend?');"
+                                >
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-danger">
+                                    <i class="fa fa-trash"></i> Delete
+                                </button>
+                                </form>
+                            @endif
                             </td>
+
                         </tr>
                     @empty
                         <tr><td colspan="8">No records found</td></tr>
@@ -1144,6 +1281,479 @@
 {{-- !!MODEL SECTION!! --}}
 
 
+{{-- ---------- helpers for time preselection (place this once before the modals) ---------- --}}
+@php
+  // Normalize to "HH:MM" since $slots is built as HH:MM strings
+  $latestTimeHM  = !empty($latest_extend_time) ? substr($latest_extend_time, 0, 5) : null;
+  $currentTimeHM = !empty($currenth) ? substr($currenth, 0, 5) : null;
+@endphp
+
+{{-- ===================== RETURN (NORMAL) ===================== --}}
+<div class="modal fade bs-return-modal-lg" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h4 class="modal-title">Return</h4>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <form method="GET" class="form-horizontal form-label-left"
+              action="{{ route('return.vehicle', ['booking_id' => $booking->id]) }}">
+          @csrf
+
+          <div class="row mb-3">
+            <label class="col-md-4 col-sm-4 col-form-label">Renter Name</label>
+            <div class="col-md-8 col-sm-8">
+              <input class="form-control" value="{{ $fullname }}" style="text-transform:uppercase" disabled>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <label class="col-md-4 col-sm-4 col-form-label">Renter NRIC Image</label>
+            <div class="col-md-8">
+              <div class="row g-3">
+                @foreach($allUploads as $upload)
+                  @if(in_array($upload['label'], ['NRIC Front Photo', 'Selfie with NRIC Photo']))
+                    <div class="col-6 text-center">
+                      <strong>{{ $upload['label'] }}</strong><br>
+                      @if($upload['file'])
+                        <img class="img-fluid mt-2" style="border:5px solid grey"
+                             src="{{ asset('assets/img/customer/' . $upload['file']) }}">
+                      @else
+                        <div class="mt-2 text-muted">No image uploaded</div>
+                      @endif
+                    </div>
+                  @endif
+                @endforeach
+              </div>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <label class="col-md-4 col-sm-4 col-form-label">Renter returning the vehicle?</label>
+            <div class="col-md-8 col-sm-8">
+              <select class="form-control" id="opt" name="return_person_status" required>
+                <option selected value="">-- Please select --</option>
+                <option value="yes">Yes</option>
+                <option value="no">No, other person</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="opt-cont"></div>
+
+          <div class="modal-footer">
+            <input type="hidden" name="booking_id" value="{{ $booking->id }}">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button name="btn_return" class="btn btn-primary" type="submit">Next</button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+{{-- ===================== END RETURN (NORMAL) ===================== --}}
+
+
+
+{{-- ===================== EXTEND (NORMAL) ===================== --}}
+<div class="modal fade bs-extend-modal-lg" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h4 class="modal-title">Extend</h4>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <form method="GET" class="form-horizontal form-label-left"
+              action="{{ route('extend.start') }}">
+
+          <div class="row mb-3">
+            <label class="col-md-4 col-sm-4 col-form-label">No. of Extend Made</label>
+            <div class="col-md-8 col-sm-8">
+              <input class="form-control" value="{{ $count }}" disabled>
+            </div>
+          </div>
+
+          @if ($count >= 9)
+            <div class="row mb-3">
+              <label class="col-md-4 col-sm-4 col-form-label"></label>
+              <div class="col-md-8 col-sm-8">
+                <span class="text-danger">Could not continue extend as extend has reached maximum limit</span>
+              </div>
+            </div>
+          @endif
+
+          <div class="row mb-3">
+            <label class="col-md-4 col-sm-4 col-form-label">Extend from</label>
+            <div class="col-md-4">
+              <input type="date" class="form-control" id="extend_from_date" name="extend_from_date"
+                     value="{{ \Carbon\Carbon::parse($latest_extend_date)->format('Y-m-d') }}"
+                     @if($count >= 9) disabled @else required @endif>
+            </div>
+            <div class="col-md-4">
+              <select name="extend_from_time" class="form-control" @if($count >= 9) disabled @else required @endif>
+                <option value="">Return Time</option>
+                @foreach($slots as $slot)
+                  <option value="{{ $slot }}" @selected($slot === $latestTimeHM)>
+                    {{ str_replace(':', '.', $slot) }}
+                  </option>
+                @endforeach
+              </select>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <label class="col-md-4 col-sm-4 col-form-label">Extend to</label>
+            <div class="col-md-4">
+              <input type="date" class="form-control" id="extend_to_date" name="extend_to_date"
+                     @if($count >= 9) disabled @else required @endif>
+            </div>
+            <div class="col-md-4">
+              <select name="extend_to_time" class="form-control" @if($count >= 9) disabled @else required @endif>
+                <option value="">Pickup Time</option>
+                @foreach($slots as $slot)
+                  <option value="{{ $slot }}">{{ str_replace(':', '.', $slot) }}</option>
+                @endforeach
+              </select>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <input type="hidden" name="vehicle_id" value="{{ $currentVehicle?->id }}">
+            <input type="hidden" name="booking_id" value="{{ $booking->id }}">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button class="btn btn-primary" type="submit" @if($count >= 9) disabled @endif>Next</button>
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+{{-- ===================== END EXTEND (NORMAL) ===================== --}}
+
+
+
+{{-- ===================== RETURN (EXCESS BRANCHES) ===================== --}}
+<div class="modal fade bs-return-extend-modal-lg" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h4 class="modal-title">Return</h4>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        @if ($excess === 'extend')
+          {{-- EXCESS = extend --}}
+          @if ($count < 9)
+            {{-- Show overdue_return form (normal) --}}
+            <form method="GET" class="form-horizontal form-label-left" action="{{ route('overdue.return', $booking->id) }}">
+
+              <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Renter Name</label>
+                <div class="col-md-8">
+                  <input class="form-control" value="{{ $fullname }}" disabled>
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Renter NRIC Image</label>
+                <div class="col-md-6">
+                  <div class="row g-3">
+                    <div class="col-6">
+                      <img class="img-fluid" style="border:5px solid grey"
+                           src="{{ asset('assets/img/customer/' . ($allUploads[0]['file'] ?? '')) }}">
+                    </div>
+                    <div class="col-6">
+                      <img class="img-fluid" style="border:5px solid grey"
+                           src="{{ asset('assets/img/customer/' . ($allUploads[1]['file'] ?? '')) }}">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Renter returning the vehicle?</label>
+                <div class="col-md-8">
+                  <select class="form-control" id="opt1" name="return_person_status" required>
+                    <option selected value="">-- Please select --</option>
+                    <option value="yes">Yes</option>
+                    <option value="no">No, other person</option>
+                  </select>
+                </div>
+              </div>
+              <div id="opt-cont1"></div>
+
+              <div class="row mb-3">
+                <label class="col-md-4 col-form-label"></label>
+                <div class="col-md-8">
+                  <span class="text-danger">
+                    Return has exceed the agreement return date &amp; time on
+                    {{ \Carbon\Carbon::createFromTimestamp($timereturn)->format('d/m/Y h:i A') }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <label class="col-md-4 col-form-label">No. of Extend Made</label>
+                <div class="col-md-8">
+                  <input class="form-control" value="{{ $count }}" disabled>
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Extend from</label>
+                <div class="col-md-4">
+                  <input type="date" class="form-control" id="extend_from_date" name="extend_from_date"
+                         value="{{ \Carbon\Carbon::parse($latest_extend_date)->format('Y-m-d') }}" required>
+                </div>
+                <div class="col-md-4">
+                  <select name="extend_from_time" class="form-control" required>
+                    <option value="">Return Time</option>
+                    @foreach($slots as $slot)
+                      <option value="{{ $slot }}" @selected($slot === $latestTimeHM)>
+                        {{ str_replace(':', '.', $slot) }}
+                      </option>
+                    @endforeach
+                  </select>
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Extend to</label>
+                <div class="col-md-4">
+                  <input type="date" class="form-control" id="extend_to_date" name="extend_to_date"
+                         value="{{ \Carbon\Carbon::createFromTimestamp($timecurrent)->format('Y-m-d') }}" required>
+                </div>
+                <div class="col-md-4">
+                  <select name="extend_to_time" class="form-control" required>
+                    <option value="">Pickup Time</option>
+                    @foreach($slots as $slot)
+                      <option value="{{ $slot }}" @selected($slot === $currentTimeHM)>
+                        {{ str_replace(':', '.', $slot) }}
+                      </option>
+                    @endforeach
+                  </select>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <input type="hidden" name="vehicle_id" value="{{ $currentVehicle?->id }}">
+                <input type="hidden" name="booking_id" value="{{ $booking->id }}">
+                <input type="hidden" name="extend_type" value="normal">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button name="overdue_return" class="btn btn-primary" type="submit">Next</button>
+              </div>
+            </form>
+
+          @else
+            {{-- Max extend reached: proceed return --}}
+            <form method="POST" class="form-horizontal form-label-left"
+                  action="{{ route('return.vehicle', ['booking_id' => $booking->id]) }}">
+              @csrf
+
+              <div class="row mb-3">
+                <label class="col-md-4 col-form-label">No. of Extend Made</label>
+                <div class="col-md-8">
+                  <input class="form-control" value="{{ $count }}" disabled>
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <label class="col-md-4 col-form-label"></label>
+                <div class="col-md-8">
+                  <span class="text-primary">
+                    Return exceeds more than halfday but the No. of extend has reached its maximum limit.
+                    <br>Please proceed return to continue
+                  </span>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <input type="hidden" name="booking_id" value="{{ $booking->id }}">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button name="btn_return" class="btn btn-primary" type="submit">Proceed Return</button>
+              </div>
+            </form>
+          @endif
+
+        @elseif ($excess === 'true')
+          {{-- EXCESS = true --}}
+          <form method="GET" class="form-horizontal form-label-left" action="{{ route('overdue.return', $booking->id) }}">
+
+            <div class="row mb-3">
+              <label class="col-md-4 col-form-label">Renter Name</label>
+              <div class="col-md-8">
+                <input class="form-control" value="{{ $fullname }}" disabled>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <label class="col-md-4 col-form-label">Renter NRIC Image</label>
+              <div class="col-md-6">
+                <div class="row g-3">
+                  <div class="col-6">
+                    <img class="img-fluid" style="border:5px solid grey"
+                         src="{{ asset('assets/img/customer/' . ($allUploads[0]['file'] ?? '')) }}">
+                  </div>
+                  <div class="col-6">
+                    <img class="img-fluid" style="border:5px solid grey"
+                         src="{{ asset('assets/img/customer/' . ($allUploads[1]['file'] ?? '')) }}">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <label class="col-md-4 col-form-label">Renter returning the vehicle?</label>
+              <div class="col-md-8">
+                <select class="form-control" id="opt2" name="return_person_status" required>
+                  <option selected value="">-- Please select --</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No, other person</option>
+                </select>
+              </div>
+            </div>
+            <div id="opt-cont2"></div>
+
+            <div class="row mb-3">
+              <label class="col-md-4 col-form-label"></label>
+              <div class="col-md-8">
+                <span class="text-danger">
+                  Return has exceed the agreement return date &amp; time on
+                  {{ \Carbon\Carbon::createFromTimestamp($timereturn)->format('d/m/Y h:i A') }}
+                </span>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <label class="col-md-4 col-form-label">Duration exceeded</label>
+              <div class="col-md-8">
+                <input class="form-control" value="{{ $currenthour }} hour(s)" disabled>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <label class="col-md-4 col-form-label">Extend from</label>
+              <div class="col-md-4">
+                @if ($count >= 9)
+                  <input type="hidden" name="extend_from_date" value="{{ \Carbon\Carbon::parse($latest_extend_date)->format('Y-m-d') }}">
+                  <input type="date" class="form-control" value="{{ \Carbon\Carbon::parse($latest_extend_date)->format('Y-m-d') }}" disabled>
+                @else
+                  <input type="date" class="form-control" id="extend_from_date" name="extend_from_date"
+                         value="{{ \Carbon\Carbon::parse($latest_extend_date)->format('Y-m-d') }}" required>
+                @endif
+              </div>
+              <div class="col-md-4">
+                @if ($count >= 9)
+                  <input type="hidden" name="extend_from_time" value="{{ $latestTimeHM }}">
+                  <select class="form-control" disabled>
+                    <option value="">Return Time</option>
+                    @foreach($slots as $slot)
+                      <option value="{{ $slot }}" @selected($slot === $latestTimeHM)>{{ str_replace(':', '.', $slot) }}</option>
+                    @endforeach
+                  </select>
+                @else
+                  <select name="extend_from_time" class="form-control" required>
+                    <option value="">Return Time</option>
+                    @foreach($slots as $slot)
+                      <option value="{{ $slot }}" @selected($slot === $latestTimeHM)>{{ str_replace(':', '.', $slot) }}</option>
+                    @endforeach
+                  </select>
+                @endif
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <label class="col-md-4 col-form-label">Extend to</label>
+              <div class="col-md-4">
+                <input type="date" class="form-control" id="extend_to_date" name="extend_to_date"
+                       value="{{ \Carbon\Carbon::createFromTimestamp($timecurrent)->format('Y-m-d') }}" required>
+              </div>
+              <div class="col-md-4">
+                <select name="extend_to_time" class="form-control" required>
+                  <option value="">Pickup Time</option>
+                  @foreach($slots as $slot)
+                    <option value="{{ $slot }}" @selected($slot === $currentTimeHM)>{{ str_replace(':', '.', $slot) }}</option>
+                  @endforeach
+                </select>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <input type="hidden" name="vehicle_id" value="{{ $currentVehicle?->id }}">
+              <input type="hidden" name="booking_id" value="{{ $booking->id }}">
+              <input type="hidden" name="extend_type" value="outstanding">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button name="overdue_return" class="btn btn-primary" type="submit">Next</button>
+            </div>
+
+          </form>
+        @endif
+      </div>
+
+    </div>
+  </div>
+</div>
+{{-- ===================== END RETURN (EXCESS) ===================== --}}
+
+
+
+{{-- Edit Customer Modal --}}
+<div class="modal fade" id="editCustomerModal" tabindex="-1" aria-labelledby="editCustomerLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editCustomerLabel">Edit Customer</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="d-flex justify-content-center gap-3 flex-wrap py-3">
+          {{-- Current Customer --}}
+          <a href="{{ route('customers.edit', ['booking' => $booking->id, 'type' => 'exist'])}}" class="btn btn-outline-secondary">
+            @if (request()->has('nric_blacklisted'))
+              <i class="fa fa-bell faa-ring animated" style="font-size:16px;color:#f95e5e"></i>
+            @endif
+            Current Customer
+          </a>
+
+          {{-- Change Customer --}}
+          <a href="{{ route('customers.edit', ['booking' => $booking->id, 'type' => 'change'])}}" class="btn btn-outline-secondary">
+            @if (request()->has('nric_new'))
+              <i class="fa fa-bell faa-ring animated" style="font-size:16px;color:#f95e5e"></i>
+            @endif
+            Change Customer
+          </a>
+
+          {{-- Create link for customer to update license --}}
+          <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#linkModal" onclick="createUpdateLicense()">
+            <i class="fa fa-external-link"></i>&nbsp;Create link for customer update license
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{{-- End Edit Customer Modal --}}
+
+
+
+
+
 {{--Pickup Modal--}}
 
 <div class="modal fade" id="pickupModal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -1272,6 +1882,56 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 @push('scripts')
+<script>
+  (function() {
+    function renderOtherPerson(containerId, selectId) {
+      const select = document.getElementById(selectId);
+      const cont   = document.getElementById(containerId);
+      if (!select || !cont) return;
+
+      const tpl = `
+        <div class="row mb-3">
+          <div class="col-12 text-center"><span class="text-primary"><i>The other person details.</i></span></div>
+        </div>
+        <div class="row mb-3">
+          <label class="col-md-4 col-form-label"></label>
+          <div class="col-md-8">
+            <input class="form-control" type="text" name="return_person_name" placeholder="Return Person Full Name" oninput="this.value = this.value.toUpperCase()" required>
+          </div>
+        </div>
+        <div class="row mb-3">
+          <label class="col-md-4 col-form-label"></label>
+          <div class="col-md-8">
+            <input class="form-control" type="text" name="return_person_nric_no" placeholder="Return Person NRIC No." oninput="this.value = this.value.toUpperCase()" required>
+          </div>
+        </div>
+        <div class="row mb-3">
+          <label class="col-md-4 col-form-label"></label>
+          <div class="col-md-8">
+            <input class="form-control" type="text" name="return_person_relationship" placeholder="Return Person Relationship" oninput="this.value = this.value.toUpperCase()" required>
+          </div>
+        </div>
+        <div class="ln_solid"></div>
+      `;
+
+      function update() {
+        cont.innerHTML = (select.value === 'no') ? tpl : '';
+      }
+
+      select.addEventListener('change', update);
+      // initialize once in case of old value
+      update();
+    }
+
+    // Hook all three selects if present
+    document.addEventListener('DOMContentLoaded', function() {
+      renderOtherPerson('opt-cont',  'opt');   // normal return modal
+      renderOtherPerson('opt-cont1', 'opt1');  // return-extend (branch 1)
+      renderOtherPerson('opt-cont2', 'opt2');  // return-extend (branch 2)
+    });
+  })();
+</script>
+
 <script>
     // Enable Bootstrap tooltips globally
     document.addEventListener("DOMContentLoaded", function() {

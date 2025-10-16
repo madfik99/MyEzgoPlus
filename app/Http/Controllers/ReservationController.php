@@ -40,6 +40,10 @@ use App\Models\UploadData;
 use App\Models\Checklist;
 use App\Models\Discount;
 use App\Models\Company;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\BookingDetailsMail;
 use App\Models\FleetMaintenanceAutoFilter;
 use App\Models\FleetMaintenanceBattery;
 use App\Models\FleetMaintenanceEngineOil;
@@ -54,6 +58,7 @@ use Workdo\Account\Entities\ChartOfAccountSubType;
 use Workdo\Account\Entities\ChartOfAccountType;
 use Carbon\Carbon;
 use Google\Service\Analytics\Upload;
+use Illuminate\Support\Facades\DB;
 
 class ReservationController extends Controller
 {
@@ -182,13 +187,35 @@ class ReservationController extends Controller
         ->toArray();
 
     // Build the query
-    $vehicleQuery = Vehicle::with(['class', 'sales','latestBooking'])
-        ->whereNotIn('id', $unavailableVehicleIds)
-        ->whereIn('availability', ['Available', 'Booked', 'Out'])
-        ->when($validated['search_vehicle'], fn($q, $v) => $q->where('class_id', $v))
-        ->orderBy('reg_no');
+    // $vehicleQuery = Vehicle::with(['class', 'sales','latestBooking'])
+    //     ->whereNotIn('id', $unavailableVehicleIds)
+    //     ->whereIn('availability', ['Available', 'Booked', 'Out'])
+    //     ->when($validated['search_vehicle'], fn($q, $v) => $q->where('class_id', $v))
+    //     ->orderBy('reg_no');
+   $vehicleQuery = Vehicle::query()
+    // keep these so Blade can read relations without N+1
+    ->with([
+        'class',
+        'latestBooking',
+        // load only the columns you need from sales to reduce payload
+        'sales:id,vehicle_id,total_sale',
+    ])
+    // make sure we don't drop the alias by putting select FIRST (optional)
+    ->select('vehicle.*')
 
-    $availableVehicles = $vehicleQuery->paginate(10)->onEachSide(2);
+    // sum of sales per vehicle (alias: sale_sum) — used only for ORDER BY
+    ->withSum('sales as sale_sum', 'total_sale')
+
+    ->whereNotIn('vehicle.id', $unavailableVehicleIds)
+    ->whereIn('vehicle.availability', ['Available', 'Booked', 'Out'])
+    ->when($validated['search_vehicle'], fn ($q, $v) => $q->where('vehicle.class_id', $v))
+
+    // ORDER: no sales (NULL) first, then low → high, then stable tie-breaker
+    ->orderByRaw('CASE WHEN sale_sum IS NULL THEN 0 ELSE 1 END')
+    ->orderBy('sale_sum', 'ASC')
+    ->orderBy('vehicle.reg_no', 'ASC');
+
+$availableVehicles = $vehicleQuery->paginate(10)->onEachSide(2);
 
     // Initialize
     $currentVehicle = null;
@@ -783,7 +810,7 @@ class ReservationController extends Controller
             'vehicle_id'        => $validated['vehicle_id'],
             'day'               => $finalDay,
             'sub_total'         => $rentalTotal,
-            'est_total'         => $grand_total,
+            'est_total'         => $grand_total-$cdwAmount,
             'discount_coupon'   => $validated['coupon'] ?? null,
             'discount_amount'   => $discount,
             'payment_status'    => $validated['payment_status'],
@@ -989,9 +1016,127 @@ class ReservationController extends Controller
             ]);
         }
 
+        // Build email payload
+        // $pickupLocDesc  = optional(\App\Models\LocationBooking::find($validated['pickup_location_id']))->description ?? '';
+        // $returnLocDesc  = optional(\App\Models\LocationBooking::find($validated['return_location_id']))->description ?? '';
+        // $vehicleMake    = optional($vehicle)->make ?? '';
+        // $vehicleModel   = optional($vehicle)->model ?? '';
+        // $createOnline   = $request->boolean('createonline'); // align with your legacy flag
+
+        // $tempPassword = null;
+        // if ($createOnline) {
+        //     // Generate temp password, store hashed (never plain)
+        //     $tempPassword = Str::random(8);
+        //     $customer->password = Hash::make($tempPassword);
+        //     $customer->save();
+        // }
+
+        // $emailData = [
+        //     'agreement_no'   => $booking->agreement_no,
+        //     'pickup_date'    => $pickupCarbon->format('Y-m-d'),
+        //     'pickup_time'    => $pickupCarbon->format('H:i'),
+        //     'pickup_location'=> $pickupLocDesc,
+        //     'return_date'    => $finalReturn->format('Y-m-d'),
+        //     'return_time'    => $finalReturn->format('H:i'),
+        //     'return_location'=> $returnLocDesc,
+        //     'vehicle_make'   => $vehicleMake,
+        //     'vehicle_model'  => $vehicleModel,
+        //     'fullname'       => trim(($customer->title ? $customer->title.' ' : '').$customer->firstname.' '.$customer->lastname),
+        //     'phone_no'       => $customer->phone_no,
+        //     'address'        => $customer->address,
+        //     'postcode'       => $customer->postcode,
+        //     'city'           => $customer->city,
+        //     'country'        => $customer->country,
+        //     'sub_total'      => $rentalTotal,
+        //     'est_total'      => $grand_total,   // or $grand_total - $cdwAmount if that’s what you show
+        //     'create_online'  => $createOnline,
+        //     'temp_password'  => $tempPassword,
+        //     // link to your Laravel route instead of raw PHP redirect
+        //     'agreement_url'  => route('reservation.view', ['booking_id' => $booking->id]),
+        // ];
+
+        // try {
+        //     // send to customer
+        //     Mail::to($customer->email)->send(new BookingDetailsMail($emailData));
+
+        //     // optional: CC staff / branch inbox
+        //     // Mail::to($customer->email)->cc('branch@example.com')->send(new BookingDetailsMail($emailData));
+
+        // } catch (\Throwable $e) {
+        //     report($e);
+        //     // Don’t block the booking flow—just flash a warning
+        //     return redirect()
+        //         ->route('reservation.view', ['booking_id' => $booking->id])
+        //         ->with('warning', 'Reservation created but email failed: '.$e->getMessage());
+        // }
+
+        // Optional customer online creation flag (align with your legacy "createonline=true")
+        $createOnline = $request->boolean('createonline');
+
+        $tempPassword = null;
+        if ($createOnline) {
+            $tempPassword = Str::random(8);   // like your legacy random hex, but readable
+            $customer->password = Hash::make($tempPassword); // store hashed, never plaintext
+            $customer->save();
+        }
+
+        // Resolve human-readable pickup/return location like your CASE in legacy
+        $pickupLocDesc = optional(\App\Models\LocationBooking::find($validated['pickup_location_id']))->description ?? '';
+        $returnLocDesc = optional(\App\Models\LocationBooking::find($validated['return_location_id']))->description ?? '';
+
+        // Company logo absolute URL (use DB if you store it)
+        $companyImageName = \DB::table('company')->where('id', 1)->value('image'); // adjust to your model if exists
+        $companyImageUrl  = $companyImageName
+            ? url('dashboard/assets/img/'.$companyImageName) // absolute URL
+            : url('dashboard/assets/img/logo.png');
+
+        $emailData = [
+            'agreement_no'     => $booking->agreement_no,
+            'pickup_date'      => \Carbon\Carbon::parse($booking->pickup_date)->format('d/m/Y'),
+            'pickup_time'      => \Carbon\Carbon::parse($booking->pickup_time)->format('H:i:s'),
+            'pickup_location'  => $pickupLocDesc,
+            'return_date'      => \Carbon\Carbon::parse($booking->return_date)->format('d/m/Y'),
+            'return_time'      => \Carbon\Carbon::parse($booking->return_time)->format('H:i:s'),
+            'return_location'  => $returnLocDesc,
+
+            'make'             => optional($vehicle)->make ?? '',
+            'model'            => optional($vehicle)->model ?? '',
+
+            'fullname'         => trim(($customer->title ? $customer->title.' ' : '').$customer->firstname.' '.$customer->lastname),
+            'phone_no'         => $customer->phone_no,
+            'address'          => $customer->address,
+            'postcode'         => $customer->postcode,
+            'city'             => $customer->city,
+            'country'          => $customer->country,
+
+            'sub_total'        => $rentalTotal,
+            'est_total'        => $grand_total,         // or $grand_total - $cdwAmount if that’s what you show
+            'refund_dep'       => $validated['bookingfee'] ?? null,
+
+            // Links/images used in the legacy design
+            'company_image_url'   => $companyImageUrl,
+            'company_base_url'    => config('app.url') ?? 'https://www.myezgo.com',
+            'product_listing_url' => (config('app.url') ? rtrim(config('app.url'),'/').'/product_listing.php' : 'https://www.myezgo.com/product_listing.php'),
+            'login_url'           => (config('app.url') ? rtrim(config('app.url'),'/').'/login.php' : 'https://www.myezgo.com/login.php'),
+            'about_url'           => (config('app.url') ? rtrim(config('app.url'),'/').'/about_us.php' : 'https://www.myezgo.com/about_us.php'),
+            'agreement_url'       => route('reservation.view', ['booking_id' => $booking->id]),
+
+            // Account activation block
+            'create_online'    => $createOnline,
+            'temp_password'    => $tempPassword,
+        ];
+
+        // Send to customer (match legacy “mail2” for booking)
+        Mail::to($customer->email)->send(new BookingDetailsMail($emailData));
+
+        // (Optional) staff notification (match your legacy “mail”)
+        // You can reuse the same template or create a separate one for staff:
+        # Mail::to('staff@example.com')->send(new BookingDetailsMail($emailData));
+
+
         
         // 16. Redirect to reservation summary/index with success
-        return redirect()->route('reservation.index', ['booking_id' => $booking->id])
+        return redirect()->route('reservation.view', ['booking_id' => $booking->id])
             ->with('success', 'Reservation successful! Agreement No: ' . $agreement_no);
     }
 
@@ -1173,7 +1318,6 @@ public function ReservationView($booking_id)
     $cdwLog = CDWLog::where('booking_trans_id', $booking_id)->first();
     $cdwId = $cdwLog?->cdw_id;
 
-
     // Company Info
     $companyRow = Company::first();
     $company = [
@@ -1199,7 +1343,6 @@ public function ReservationView($booking_id)
     $ref_name = $customer->ref_name ?? '-';
     $ref_phoneno = $customer->ref_phoneno ?? '-';
     $ref_relationship = $customer->ref_relationship ?? '-';
-    
 
     // Uploads
     $uploads = UploadData::where('customer_id', $customer->id)
@@ -1351,12 +1494,12 @@ public function ReservationView($booking_id)
 
     $checklist = Checklist::where('booking_trans_id', $booking->id)->first();
 
-    //pickup interior
+    // pickup interior
     $pickupInteriorImages = UploadData::where('booking_trans_id', $booking_id)
-    ->where('position', 'pickup_interior')
-    ->where('file_size', '!=', 0)
-    ->orderByDesc('id')
-    ->get(['file_name','no']);
+        ->where('position', 'pickup_interior')
+        ->where('file_size', '!=', 0)
+        ->orderByDesc('id')
+        ->get(['file_name','no']);
 
     $returnInteriorImages = UploadData::where('booking_trans_id', $booking_id)
         ->where('position', 'return_interior')
@@ -1364,12 +1507,11 @@ public function ReservationView($booking_id)
         ->orderByDesc('id')
         ->get(['file_name','no']);
 
-    
     $pickupExteriorImages = UploadData::where('booking_trans_id', $booking_id)
-    ->where('position', 'pickup_exterior')
-    ->where('file_size', '!=', 0)
-    ->orderByDesc('id')
-    ->get(['file_name','no']);
+        ->where('position', 'pickup_exterior')
+        ->where('file_size', '!=', 0)
+        ->orderByDesc('id')
+        ->get(['file_name','no']);
 
     $returnExteriorImages = UploadData::where('booking_trans_id', $booking_id)
         ->where('position', 'return_exterior')
@@ -1378,9 +1520,89 @@ public function ReservationView($booking_id)
         ->get(['file_name','no']);
 
     $extends = Extend::where('extend_type', 'manual')
-    ->where('booking_trans_id', $booking_id)
-    ->orderBy('id')
-    ->get();
+        ->where('booking_trans_id', $booking_id)
+        ->orderBy('id')
+        ->get();
+
+    // ===== Added: variables needed by Blade modals =====
+
+    // Count of manual extends for this booking (to block >= 9)
+    $count = Extend::where('extend_type', 'manual')
+        ->where('booking_trans_id', $booking_id)
+        ->count();
+
+    // Latest extend (fallback to booking return datetime)
+    $latestExtend = Extend::where('booking_trans_id', $booking_id)
+        ->where('extend_type', 'manual')
+        ->orderByDesc('id')
+        ->first();
+
+    // Derive latest extend DATE and TIME
+    if ($latestExtend) {
+        $latest_extend_date = $latestExtend->extend_to_date
+            ? \Carbon\Carbon::parse($latestExtend->extend_to_date)->format('Y-m-d')
+            : null;
+
+        // If you have a separate time column use it; else derive from datetime
+        $latest_extend_time = $latestExtend->extend_to_time
+            ?? (\Carbon\Carbon::parse($latestExtend->extend_to_date)->format('H:i'));
+    } else {
+        $rd = $booking->return_date ? \Carbon\Carbon::parse($booking->return_date) : null;
+        $latest_extend_date = $rd ? $rd->format('Y-m-d') : null;
+        $latest_extend_time = $rd ? $rd->format('H:i') : null;
+    }
+
+    // Build timestamps / diffs
+    $timereturn  = $latest_extend_date
+        ? strtotime(trim($latest_extend_date . ' ' . ($latest_extend_time ?? '00:00')))
+        : null;
+
+    $timecurrent = time();
+
+    $currenthour = 0;
+    $currentday  = 0;
+    $totalhour   = 0;
+
+    if ($timereturn) {
+        $return_asal = \Carbon\Carbon::createFromTimestamp($timereturn);
+        $return_skrg = \Carbon\Carbon::createFromTimestamp($timecurrent);
+        $diff        = $return_asal->diff($return_skrg);
+        $currenthour = (int) $diff->h;
+        $currentday  = (int) $diff->d;
+        $totalhour   = ($currentday * 24) + $currenthour;
+    }
+
+    // Keep DB value if present; else compute like legacy
+    $excess = $booking->excess ?? null;
+    if (empty($excess)) {
+        if ($currentday < 1 && $timereturn && $timecurrent > $timereturn && $currenthour > 1 && $currenthour < 13) {
+            $excess = 'true';
+        } elseif (!$timereturn || $timecurrent < $timereturn || $totalhour < 2) {
+            $excess = 'early';
+        } else {
+            $excess = 'extend';
+        }
+    }
+
+    // Half-hour slots (08:00–23:00)
+    $slots = [];
+    for ($h = 8; $h <= 23; $h++) {
+        foreach ([0, 30] as $m) {
+            $slots[] = sprintf('%02d:%02d', $h, $m);
+        }
+    }
+
+    // Current rounded half-hour in KL time (only if within 08:00–22:59:59)
+    $now      = \Carbon\Carbon::now('Asia/Kuala_Lumpur')->second(0);
+    $open     = $now->copy()->setTime(8, 0, 0);
+    $close    = $now->copy()->setTime(23, 0, 0); // exclusive
+    $rounded  = $now->copy()->minute($now->minute < 30 ? 0 : 30);
+    $currenth = $now->between($open, $close->copy()->subSecond()) ? $rounded->format('H:i:s') : null;
+
+    $pickup_receipt = UploadData::where('booking_trans_id', $booking->id)
+    ->where('position', 'pickup_receipt')
+    ->latest('created')
+    ->first();
 
 
     // Return view
@@ -1391,9 +1613,14 @@ public function ReservationView($booking_id)
         'allUploads', 'booking_receipt', 'occupation', 'cdwAmount',
         'currentVehicle', 'discount_coupon', 'availableVehicles',
         'cdwId','checklist','pickupInteriorImages','returnInteriorImages',
-        'pickupExteriorImages','returnExteriorImages','extends'
+        'pickupExteriorImages','returnExteriorImages','extends', 'excess',
+        // Added for modals
+        'count', 'latest_extend_date', 'latest_extend_time',
+        'timereturn', 'timecurrent', 'currenthour', 'currentday', 'totalhour',
+        'slots', 'currenth', 'pickup_receipt'
     ));
 }
+
 
 public function ReservationForm($booking_id)
 {
@@ -1601,6 +1828,417 @@ public function changeVehicle(Request $request, $booking_id)
     return redirect()->route('reservation.view', ['booking_id' => $booking->id])
         ->with('success', 'Booking updated successfully. Agreement No: ' . $booking->agreement_no);
 }
+
+
+
+    public function editCust(Request $request, BookingTrans $booking)
+    {
+        $booking->load('customer');
+        $customer = $booking->customer;
+
+        // grab related sales as you already do...
+        $pickupSale = Sale::where('booking_trans_id', $booking->id)
+            ->where('title', 'Pickup')->first();
+        $bookingDepositSale = Sale::where('booking_trans_id', $booking->id)
+            ->where('title', 'Booking Deposit in')->first();
+
+        $type = $request->query('type', 'exist');
+
+        // pull filenames from upload_data by category (adjust names if yours differ)
+        $front = $util = $work = $selfie = $licenseFront = $licenseBack = null;
+
+        if ($customer) {
+            $filenames = UploadData::query()
+                ->where('position', 'customer')
+                ->where('customer_id', $customer->id)
+                ->pluck('file_name'); // Collection<string>
+
+            foreach ($filenames as $name) {
+                $n = strtolower($name);
+                if (str_contains($n, 'identity_photo_front')) {
+                    $front = $name;
+                } elseif (str_contains($n, 'utility_photo')) {
+                    $util = $name;
+                } elseif (str_contains($n, 'working_photo')) {
+                    $work = $name;
+                } elseif (str_contains($n, 'selfie_nric')) {
+                    $selfie = $name;
+                } elseif (str_contains($n, 'license_front')) {
+                    $licenseFront = $name;
+                } elseif (str_contains($n, 'license_back')) {
+                    $licenseBack = $name;
+                }
+            }
+        }
+
+
+        $hasIdPhotos = !empty($front) || !empty($selfie) || !empty($licenseFront) || !empty($licenseBack) || !empty($util) || !empty($work);
+
+        return view('reservation.editCust', [
+            'type'               => $type,
+            'booking'            => $booking,
+            'customer'           => $customer,
+            'pickupSale'         => $pickupSale,
+            'bookingDepositSale' => $bookingDepositSale,
+            'nric_blacklisted'   => $request->query('nric_blacklisted'),
+
+            // send the 4 filenames to Blade
+            'idPhotoFront'       => $front,
+            'selfieNric'         => $selfie,
+            'licenseFront'       => $licenseFront,
+            'licenseBack'        => $licenseBack,
+            'utilityPhoto'       => $util,
+            'workingPhoto'       => $work,
+
+            'hasIdPhotos'        => $hasIdPhotos
+        ]);
+    }
+
+
+    public function updateExistingCust(Request $request, BookingTrans $booking)
+    {
+        // Validate only what this form actually edits
+        $validated = $request->validate([
+            'customer_id' => ['required','integer','exists:customer,id'],
+            'nric_no'            => ['nullable','string'], // it’s disabled normally, enabled only if blacklisted banner flow
+            'nric_type'          => ['required','string'],
+            'title'              => ['required','string'],
+            'firstname'          => ['required','string'],
+            'lastname'           => ['required','string'],
+            'gender'             => ['required','in:Male,Female'],
+            'race'               => ['nullable','string'],
+            'dob'                => ['nullable','date'],
+            'phone_no'           => ['required','string'],
+            'phone_no2'          => ['nullable','string'],
+            'email'              => ['nullable','email'],
+            'license_no'         => ['nullable','string'],
+            'license_exp'        => ['nullable','date'],
+            'address'            => ['nullable','string'],
+            'postcode'           => ['nullable','string'],
+            'city'               => ['nullable','string'],
+            'country'            => ['nullable','string'],
+
+            // Reference
+            'ref_name'           => ['nullable','string'],
+            'ref_phoneno'        => ['nullable','string'],
+            'ref_relationship'   => ['nullable','string'],
+            'ref_address'        => ['nullable','string'],
+
+            // Additional driver
+            'drv_name'           => ['nullable','string'],
+            'drv_nric'           => ['nullable','string'],
+            'drv_address'        => ['nullable','string'],
+            'drv_phoneno'        => ['nullable','string'],
+            'drv_license_no'     => ['nullable','string'],
+            'drv_license_exp'    => ['nullable','date'],
+
+            // Payment
+            'payment_amount'     => ['nullable','numeric'],
+            'payment_status'     => ['nullable','string'],
+            'payment_type'       => ['nullable','string'],
+            'deposit'            => ['nullable','numeric'],
+            'refund_dep_payment' => ['nullable','string'],
+
+            // Survey
+            'survey_type'        => ['nullable','string'],
+            'survey_details'     => ['nullable','string'],
+
+            // Files (array with 0..3 indexes like old page)
+            'identity_photo'     => ['array'],
+            'identity_photo.*'   => ['nullable','file','mimes:jpg,jpeg,png,gif','max:8192'],
+        ]);
+
+        // 1) Blacklist check (if NRIC editable in your flow)
+        if ($request->filled('nric_no')) {
+            $isBlacklisted = Customer::where('status', 'B')
+                ->where('nric_no', $request->input('nric_no'))
+                ->exists();
+
+            if ($isBlacklisted) {
+                return redirect()
+                    ->route('customers.edit', ['booking' => $booking->id, 'type' => 'exist', 'nric_blacklisted' => $request->input('nric_no')])
+                    ->with('error', 'Rental could not be continued as the NRIC No. entered has been blacklisted.');
+            }
+        }
+
+        DB::transaction(function () use ($request, $booking, $validated) {
+            // 2) Load current booking/customer
+            $booking->load('customer');
+            $customer = Customer::findOrFail($validated['customer_id']); // this is the posted one
+
+            // 3) If posted customer_id differs from booking->customer_id, update booking’s customer_id
+            if ($booking->customer_id !== (int)$validated['customer_id']) {
+                $booking->customer_id = (int)$validated['customer_id'];
+                $booking->save();
+            }
+
+            // 4) Handle identity photos (index 0..3 map)
+            // 0: identity_photo_front.jpg
+            // 1: identity_photo_back.jpg
+            // 2: utility_photo.jpg
+            // 3: working_photo.jpg
+            if ($request->hasFile('identity_photo')) {
+                $this->saveIdentityPhotos($customer, $request->file('identity_photo'));
+            }
+
+            // 5) Update customer details
+            $customer->fill([
+                'title'            => $validated['title'],
+                'firstname'        => $validated['firstname'],
+                'lastname'         => $validated['lastname'],
+                'dob'              => $validated['dob'] ?? null,
+                'gender'           => $validated['gender'] ?? null,
+                'race'             => $validated['race'] ?? null,
+                'license_no'       => $validated['license_no'] ?? null,
+                'license_exp'      => $validated['license_exp'] ?? null,
+                'age'              => isset($validated['dob']) ? Carbon::parse($validated['dob'])->age : $customer->age,
+                'phone_no'         => $validated['phone_no'],
+                'phone_no2'        => $validated['phone_no2'] ?? null,
+                'email'            => $validated['email'] ?? null,
+                'address'          => $validated['address'] ?? null,
+                'postcode'         => $validated['postcode'] ?? null,
+                'city'             => $validated['city'] ?? null,
+                'country'          => $validated['country'] ?? null,
+                'status'           => 'A',
+                'ref_name'         => $validated['ref_name'] ?? null,
+                'ref_phoneno'      => $validated['ref_phoneno'] ?? null,
+                'ref_relationship' => $validated['ref_relationship'] ?? null,
+                'ref_address'      => $validated['ref_address'] ?? null,
+                'drv_name'         => $validated['drv_name'] ?? null,
+                'drv_nric'         => $validated['drv_nric'] ?? null,
+                'drv_address'      => $validated['drv_address'] ?? null,
+                'drv_phoneno'      => $validated['drv_phoneno'] ?? null,
+                'drv_license_no'   => $validated['drv_license_no'] ?? null,
+                'drv_license_exp'  => $validated['drv_license_exp'] ?? null,
+                'survey_type'      => $validated['survey_type'] ?? null,
+                'survey_details'   => $validated['survey_details'] ?? null,
+                'mid'              => auth()->id(), // maps $_SESSION['cid']
+                'mdate'            => now(),
+            ]);
+            $customer->save();
+
+            // 6) Update booking payment fields
+            $booking->balance            = $validated['payment_amount'] ?? $booking->balance;
+            $booking->refund_dep_payment = $validated['refund_dep_payment'] ?? $booking->refund_dep_payment;
+            $booking->payment_status     = $validated['payment_status'] ?? $booking->payment_status;
+            $booking->payment_type       = $validated['payment_type'] ?? $booking->payment_type;
+            $booking->refund_dep         = $validated['deposit'] ?? $booking->refund_dep;
+            $booking->save();
+
+            // 7) Update sale row for Pickup (if exists)
+            Sale::where('booking_trans_id', $booking->id)
+                ->where('title', 'Pickup')
+                ->where('type', 'Sale')
+                ->update([
+                    'payment_type' => $validated['payment_type'] ?? null,
+                    'mid'          => auth()->id(),
+                    'modified'     => now(),
+                ]);
+        });
+
+        return redirect()
+        ->route('reservation.view', ['booking_id' => $booking->id])
+        ->with('success', 'Customer has been edited.');
+
+    }
+
+    /**
+     * Save up to 4 identity photos with Intervention (quality ~40) and static filenames.
+     * public/storage/customer/{id}-identity_photo_front.jpg etc.
+     */
+    private function saveIdentityPhotos(Customer $customer, array $files): void
+    {
+        $map = [
+            0 => ['field' => 'identity_photo_front', 'name' => "{$customer->id}-identity_photo_front.jpg"],
+            1 => ['field' => 'identity_photo_back',  'name' => "{$customer->id}-identity_photo_back.jpg"],
+            2 => ['field' => 'utility_photo',        'name' => "{$customer->id}-utility_photo.jpg"],
+            3 => ['field' => 'working_photo',        'name' => "{$customer->id}-working_photo.jpg"],
+        ];
+
+        foreach ($files as $idx => $file) {
+            if (!$file) continue;
+            if (!isset($map[$idx])) continue;
+
+            $targetName = $map[$idx]['name'];
+            $diskPath   = "customer/{$targetName}";
+            $absPath    = storage_path("app/public/{$diskPath}");
+
+            // Ensure directory exists
+            if (!is_dir(dirname($absPath))) {
+                @mkdir(dirname($absPath), 0775, true);
+            }
+
+            // Re-encode to jpg @ quality 40 (approx your compressImage(..., 40))
+            Image::make($file->getRealPath())
+                ->encode('jpg', 40)
+                ->save($absPath);
+
+            // Update DB field with filename
+            $customer->{$map[$idx]['field']} = $targetName;
+        }
+
+        $customer->save();
+    }
+
+    // in CustomerController
+
+public function updateChangeCust(Request $request, BookingTrans $booking)
+{
+    $data = $request->validate([
+        'nric_no'            => ['required','string'],
+        'nric_type'          => ['required','string'],
+        'title'              => ['required','string'],
+        'firstname'          => ['required','string'],
+        'lastname'           => ['required','string'],
+        'gender'             => ['required','in:Male,Female'],
+        'race'               => ['nullable','string'],
+        'dob'                => ['nullable','date'],
+        'phone_no'           => ['required','string'],
+        'phone_no2'          => ['nullable','string'],
+        'email'              => ['nullable','email'],
+        'license_no'         => ['required','string'],
+        'license_exp'        => ['required','date'],
+        'address'            => ['required','string'],
+        'postcode'           => ['required','string'],
+        'city'               => ['required','string'],
+        'country'            => ['required','string'],
+
+        // reference
+        'ref_name'           => ['required','string'],
+        'ref_phoneno'        => ['required','string'],
+        'ref_relationship'   => ['required','string'],
+        'ref_address'        => ['required','string'],
+
+        // payment
+        'payment_amount'     => ['required','numeric'],
+        'payment_status'     => ['required','string'],
+        'payment_type'       => ['nullable','string'],
+        'deposit'            => ['required','numeric'],
+        'refund_dep_payment' => ['required','string'],
+
+        // optional survey
+        'survey_type'        => ['nullable','string'],
+        'survey_details'     => ['nullable','string'],
+    ]);
+
+    // we’ll capture the redirect after the transaction
+    $redirect = DB::transaction(function () use ($data, $booking) {
+
+        // 1) check if customer exists by NRIC (table is `customer` via the model)
+        /** @var Customer|null $existing */
+        $existing = Customer::where('nric_no', $data['nric_no'])->first();
+
+        if ($existing) {
+            // 1a) blacklist gate
+            if ($existing->status === 'B') {
+                // throw to rollback & bubble up a redirect message after tx
+                throw new \RuntimeException(
+                    'BLACKLIST::' . ($existing->reason_blacklist ?: 'Customer is blacklisted and cannot be used for rental.')
+                );
+            }
+
+            // 1b) update existing (don’t change nric_no here)
+            $existing->fill([
+                'title'            => $data['title'],
+                'firstname'        => $data['firstname'],
+                'lastname'         => $data['lastname'],
+                'dob'              => $data['dob'] ?? null,
+                'age'              => !empty($data['dob']) ? Carbon::parse($data['dob'])->age : $existing->age,
+                'gender'           => $data['gender'],
+                'race'             => $data['race'] ?? null,
+                'nric_type'        => $data['nric_type'],
+                'license_no'       => $data['license_no'],
+                'license_exp'      => $data['license_exp'],
+                'phone_no'         => $data['phone_no'],
+                'phone_no2'        => $data['phone_no2'] ?? null,
+                'email'            => $data['email'] ?? null,
+                'address'          => $data['address'],
+                'postcode'         => $data['postcode'],
+                'city'             => $data['city'],
+                'country'          => $data['country'],
+                'status'           => 'A',
+                'ref_name'         => $data['ref_name'],
+                'ref_phoneno'      => $data['ref_phoneno'],
+                'ref_relationship' => $data['ref_relationship'],
+                'ref_address'      => $data['ref_address'],
+                'survey_type'      => $data['survey_type'] ?? $existing->survey_type,
+                'survey_details'   => $data['survey_details'] ?? $existing->survey_details,
+                'mid'              => auth()->id(),
+                'mdate'            => now(),
+            ])->save();
+
+            $customer = $existing;
+        } else {
+            // 2) create brand-new customer (table is `customer`)
+            $customer = Customer::create([
+                'title'            => $data['title'],
+                'firstname'        => $data['firstname'],
+                'lastname'         => $data['lastname'],
+                'dob'              => $data['dob'] ?? null,
+                'age'              => !empty($data['dob']) ? Carbon::parse($data['dob'])->age : null,
+                'gender'           => $data['gender'],
+                'race'             => $data['race'] ?? null,
+                'nric_no'          => $data['nric_no'],
+                'nric_type'        => $data['nric_type'],
+                'license_no'       => $data['license_no'],
+                'license_exp'      => $data['license_exp'],
+                'phone_no'         => $data['phone_no'],
+                'phone_no2'        => $data['phone_no2'] ?? null,
+                'email'            => $data['email'] ?? null,
+                'address'          => $data['address'],
+                'postcode'         => $data['postcode'],
+                'city'             => $data['city'],
+                'country'          => $data['country'],
+                'status'           => 'A',
+                'ref_name'         => $data['ref_name'],
+                'ref_phoneno'      => $data['ref_phoneno'],
+                'ref_relationship' => $data['ref_relationship'],
+                'ref_address'      => $data['ref_address'],
+                'survey_type'      => $data['survey_type'] ?? null,
+                'survey_details'   => $data['survey_details'] ?? null,
+                'cid'              => auth()->id(),
+                'cdate'            => now(),
+            ]);
+        }
+
+        // 3) attach customer to booking + update financials (booking_trans table via model)
+        $booking->fill([
+            'customer_id'        => $customer->id,
+            'balance'            => $data['payment_amount'],
+            'refund_dep_payment' => $data['refund_dep_payment'],
+            'payment_status'     => $data['payment_status'],
+            'payment_type'       => $data['payment_type'] ?? null,
+            'refund_dep'         => $data['deposit'],
+        ])->save();
+
+        // 4) touch Pickup sale row’s payment_type (sales table via model)
+        Sale::where('booking_trans_id', $booking->id)
+            ->where('title', 'Pickup')
+            ->where('type', 'Sale')
+            ->update([
+                'payment_type' => $data['payment_type'] ?? null,
+                'mid'          => auth()->id(),
+                'modified'     => now(),
+            ]);
+
+        // return success signal
+        return ['ok' => true];
+    });
+
+    // commit succeeded
+    if (!empty($redirect['ok'])) {
+        return redirect()
+            ->route('reservation.view', ['booking_id' => $booking->id])
+            ->with('success', 'Customer has been changed.');
+    }
+
+    // if we ever get here due to thrown BLACKLIST:: error, catch and redirect nicely
+    // (Laravel will have already rolled back)
+    return redirect()
+        ->route('customers.edit', ['booking' => $booking->id, 'type' => 'change'])
+        ->with('error', 'Unable to change customer.');
+}
+
 
 
 

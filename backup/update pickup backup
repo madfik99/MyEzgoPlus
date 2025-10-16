@@ -1,0 +1,326 @@
+public function updatePickup(Request $request, $booking_id)
+{
+    $booking = BookingTrans::with(['vehicle', 'customer'])->findOrFail($booking_id);
+    $cdwlog = CDWLog::where('booking_trans_id', $booking_id)->first();
+
+    if (in_array($booking->available, ['Out', 'Extend'])) {
+        return back()->with('error', 'Vehicle currently unavailable for pickup.');
+    }
+
+
+    // Decode hidden JSON arrays from the modal uploader
+    $request->merge([
+        'damageParts'   => json_decode($request->input('damageParts', '[]'), true),
+        'damageRemarks' => json_decode($request->input('damageRemarks', '[]'), true),
+    ]);
+
+    $validated = $request->validate([
+        'payment_type'        => 'required|string',
+        'payment_balance' => 'nullable|numeric|min:0',
+        
+        'fuel_level'          => 'required|integer|min:0|max:6',
+        'mileage'             => 'required|integer',
+        'car_seat_condition'  => 'required|string',
+        'cleanliness'         => 'required|string',
+        'hidden_datas'        => 'nullable|string', // Fabric board (damage sketch)
+
+        // Interior checklist (optional flags)
+        'start_engine'        => 'nullable|string',
+        'engine_condition'    => 'nullable|string',
+        'test_gear'           => 'nullable|string',
+        'no_alarm'            => 'nullable|string',
+        'air_conditioner'     => 'nullable|string',
+        'radio'               => 'nullable|string',
+        'wiper'               => 'nullable|string',
+        'window_condition'    => 'nullable|string',
+        'power_window'        => 'nullable|string',
+        'perfume'             => 'nullable|string',
+        'carpet'              => 'nullable|string',
+        'sticker_p'           => 'nullable|string',
+        'Jack'                => 'nullable|string',
+        'Tools'               => 'nullable|string',
+        'Signage'             => 'nullable|string',
+        'Tyre_Spare'          => 'nullable|string',
+        'Child_Seat'          => 'nullable|string',
+        'Lamp'                => 'nullable|string',
+        'Tyres_Condition'     => 'nullable|string',
+
+        // Image uploads
+        'interior0'           => 'required|image', 'interior1' => 'nullable|image',
+        'interior2'           => 'required|image', 'interior3' => 'nullable|image',
+        'interior4'           => 'nullable|image', 'front_left' => 'required|image',
+        'rear'                => 'required|image', 'front_right' => 'required|image',
+        'front_with_customer' => 'required|image', 'rear_left' => 'nullable|image',
+        'rear_right'          => 'nullable|image', 'front' => 'nullable|image',
+
+        // Modal damage
+        'damagePhotos'        => 'nullable|array|max:50',
+        'damagePhotos.*'      => 'image|mimes:jpeg,png,jpg|max:5120',
+        'damageParts'         => 'nullable|array',
+        'damageParts.*'       => 'nullable|string|max:255',
+        'damageRemarks'       => 'nullable|array',
+        'damageRemarks.*'     => 'nullable|string|max:255',
+
+        // NEW: signature (make sure your Blade posts these)
+        // Accept Y/yes/on/1 so it works whether you use value="Y" or default checkbox values
+        'renter_ack'          => 'required|in:Y,yes,on,1',
+        'signature_data'      => 'required|string',
+    ], [
+        'renter_ack.in'       => 'Please confirm the renter acknowledgement.',
+        'signature_data.required' => 'Please provide a signature.',
+    ]);
+
+    // Mark booking out & store payment type
+    $booking->update([
+        'payment_type' => $validated['payment_type'],
+        'payment_status' => 'FullRental',
+        'balance' => $booking->balance + $validated['payment_balance']+$cdwlog->amount,
+        'available'    => 'Out',
+    ]);
+
+    $cdwlog->update([
+        'status' => 'Paid',
+    ]);
+
+
+    // Sale Parts
+    $pickupDate = $booking->pickup_date ?? Carbon::now()->format('Y-m-d');
+    $returnDate = $booking->return_date ?? Carbon::now()->format('Y-m-d');
+    $totalDays = Carbon::parse($returnDate)->diffInDays(Carbon::parse($pickupDate));
+
+    $estTotal  = (float) ($booking->est_total ?? 0);
+    $refundDep = (float) ($booking->refund_dep ?? 0);
+    $saleAmount = max(0, round($estTotal - $refundDep, 2));
+
+
+    Sale::updateOrCreate(
+        [   'booking_trans_id' => $booking_id, 
+            'title' => 'Pickup', 
+            'type' => 'Sale'
+        ],
+        [
+            'vehicle_id'     => $booking->vehicle->id,
+            'total_day'      => $totalDays,
+            'total_sale'     => $saleAmount,
+            'payment_status' => 'Paid',
+            'payment_type'   => $booking->payment_type,
+            'image'          => $receiptName ?? null,
+            'pickup_date'    => $pickupDate,
+            'return_date'    => $returnDate,
+            'staff_id'       => auth()->id(),
+            'created'        => now(),
+        ]
+    );
+    // END Sale Parts
+
+    // Save FABRIC damage canvas (existing)
+    if ($request->filled('hidden_datas')) {
+        [, $damageData] = explode(';', $request->input('hidden_datas'));
+        [, $damageData] = explode(',', $damageData);
+        $decoded = base64_decode($damageData);
+        Storage::disk('public')->put("damage_markings/damage_{$booking_id}.jpg", $decoded);
+    }
+
+    // NEW: Save SIGNATURE canvas
+    $signFilename = null;
+    if ($request->filled('signature_data')) {
+        $sigDataUrl = $request->input('signature_data'); // data:image/png;base64,....
+        if (Str::startsWith($sigDataUrl, 'data:image/')) {
+            $sigDataUrl = Str::after($sigDataUrl, 'base64,');
+        }
+        $sigDataUrl = str_replace(' ', '+', $sigDataUrl);
+        $sigBinary = base64_decode($sigDataUrl);
+
+        if ($sigBinary === false) {
+            return back()->withErrors(['signature_data' => 'Invalid signature image.'])->withInput();
+        }
+
+        $signFilename = "sign-pickup-{$booking_id}.png";
+        Storage::disk('public')->put("sign_pickup/{$signFilename}", $sigBinary);
+    }
+
+    // Checklist saving (don’t nuke signature unless we actually received one)
+    $checklistData = [
+        'car_out_start_engine'     => $request->has('start_engine') ? 'Y' : 'X',
+        'car_out_engine_condition' => $request->has('engine_condition') ? 'Y' : 'X',
+        'car_out_test_gear'        => $request->has('test_gear') ? 'Y' : 'X',
+        'car_out_no_alarm'         => $request->has('no_alarm') ? 'Y' : 'X',
+        'car_out_air_conditioner'  => $request->has('air_conditioner') ? 'Y' : 'X',
+        'car_out_radio'            => $request->has('radio') ? 'Y' : 'X',
+        'car_out_wiper'            => $request->has('wiper') ? 'Y' : 'X',
+        'car_out_window_condition' => $request->has('window_condition') ? 'Y' : 'X',
+        'car_out_power_window'     => $request->has('power_window') ? 'Y' : 'X',
+        'car_out_perfume'          => $request->has('perfume') ? 'Y' : 'X',
+        'car_out_carpet'           => $request->has('carpet') ? 'Y' : 'X',
+        'car_out_sticker_p'        => $request->has('sticker_p') ? 'Y' : 'X',
+        'car_out_jack'             => $request->has('Jack') ? 'Y' : 'X',
+        'car_out_tools'            => $request->has('Tools') ? 'Y' : 'X',
+        'car_out_signage'          => $request->has('Signage') ? 'Y' : 'X',
+        'car_out_tyre_spare'       => $request->has('Tyre_Spare') ? 'Y' : 'X',
+        'car_out_child_seat'       => $request->has('Child_Seat') ? 'Y' : 'X',
+        'car_out_lamp'             => $request->has('Lamp') ? 'Y' : 'X',
+        'car_out_tyres_condition'  => $request->has('Tyres_Condition') ? 'Y' : 'X',
+        'car_out_fuel_level'       => $validated['fuel_level'],
+        'car_out_mileage'          => $validated['mileage'],
+        'car_out_seat_condition'   => $validated['car_seat_condition'],
+        'car_out_cleanliness'      => $validated['cleanliness'],
+        'car_out_remark'  => $request->has('markingRemarks') ? $request->input('markingRemarks') : null,
+        'modified'                 => Carbon::now(),
+    ];
+
+    if (isset($decoded)) {
+        $checklistData['car_out_image'] = "damage_markings/damage_{$booking_id}.jpg";
+    } else {
+        $checklistData['car_out_image'] = null;
+    }
+
+    // only set sign image if a new one arrived this submit
+    if ($signFilename) {
+        $checklistData['car_out_sign_image'] = $signFilename; // store just the file name, like your old PHP
+    }
+
+    Checklist::updateOrCreate(
+        ['booking_trans_id' => $booking_id],
+        $checklistData
+    );
+
+    // === existing uploads logic below remains unchanged ===
+
+    // Get global sequence
+    $lastGlobalSequence = UploadData::whereIn('position', ['pickup_damage', 'pickup_interior', 'pickup_exterior'])
+        ->orderByDesc('created')->value('sequence') ?? 0;
+
+    $nextSequence = ($lastGlobalSequence % 5) + 1;
+
+    // Delete old interior/exterior in this sequence
+    UploadData::whereIn('position', ['pickup_interior', 'pickup_exterior'])
+        ->where('sequence', $nextSequence)
+        ->delete();
+
+    $manager = new ImageManager(new GdDriver());
+
+    $imageFields = [
+        'interior0' => 'pickup_interior', 'interior1' => 'pickup_interior',
+        'interior2' => 'pickup_interior', 'interior3' => 'pickup_interior',
+        'interior4' => 'pickup_interior', 'front_left' => 'pickup_exterior',
+        'rear' => 'pickup_exterior', 'front_right' => 'pickup_exterior',
+        'front_with_customer' => 'pickup_exterior', 'rear_left' => 'pickup_exterior',
+        'rear_right' => 'pickup_exterior', 'front' => 'pickup_exterior',
+    ];
+
+    $noMap = [
+        'interior0' => 1, 'interior1' => 2, 'interior2' => 3, 'interior3' => 4, 'interior4' => 5,
+        'front_left' => 1, 'front_right' => 2, 'rear_left' => 3, 'rear_right' => 4, 'rear' => 5,
+        'front_with_customer' => 6, 'front' => 7,
+    ];
+
+    foreach ($imageFields as $field => $position) {
+        if ($request->hasFile($field)) {
+            $file = $request->file($field);
+            $no = $noMap[$field] ?? 1;
+
+            $filename = "{$booking_id}_{$position}_seq{$nextSequence}_no{$no}.jpg";
+            $image = $manager->read($file)->scale(width: 800)->toJpeg(75);
+            $path = "pickup_images/" . ($position === 'pickup_interior' ? 'interior' : 'exterior') . "/{$filename}";
+            Storage::disk('public')->put($path, (string)$image);
+
+            UploadData::updateOrCreate(
+                ['position' => $position, 'sequence' => $nextSequence, 'no' => $no],
+                [
+                    'booking_trans_id' => $booking_id,
+                    'customer_id'      => $booking->customer->id,
+                    'file_name'        => $path,
+                    'file_size'        => Storage::disk('public')->size($path),
+                    'file_type'        => 'jpg',
+                    'status'           => 'Active',
+                    'vehicle_id'       => $booking->vehicle->id,
+                    'modified'         => Carbon::now(),
+                    'mid'              => auth()->id(),
+                    'created'          => Carbon::now(),
+                    'cid'              => auth()->id(),
+                ]
+            );
+        }
+    }
+
+    // Handle damage photos
+    $damagePhotos  = $request->file('damagePhotos', []);
+    $damageParts   = $request->input('damageParts', []);
+    $damageRemarks = $request->input('damageRemarks', []);
+
+    if (is_array($damagePhotos) && count($damagePhotos) > 0) {
+        // Delete existing damage in this sequence
+        UploadData::where('position', 'pickup_damage')
+            ->where('sequence', $nextSequence)
+            ->delete();
+
+        foreach ($damagePhotos as $index => $file) {
+            if (!$file) continue;
+
+            $part   = Arr::get($damageParts, $index, 'Unknown');
+            $remark = Arr::get($damageRemarks, $index, '');
+
+            $partSafe   = preg_replace('/[^a-z0-9]/i', '_', strtolower($part));
+            $remarkSafe = preg_replace('/[^a-z0-9]/i', '_', strtolower($remark));
+            $no = $index + 1;
+
+            $filename = "{$booking_id}_pickup_damage_seq{$nextSequence}_no{$no}_{$partSafe}_{$remarkSafe}.jpg";
+            $image = $manager->read($file)->scale(width: 800)->toJpeg(75);
+            $path = "pickup_images/damage/{$filename}";
+            Storage::disk('public')->put($path, (string)$image);
+
+            UploadData::create([
+                'booking_trans_id' => $booking_id,
+                'position'         => 'pickup_damage',
+                'sequence'         => $nextSequence,
+                'no'               => $no,
+                'customer_id'      => $booking->customer->id,
+                'file_name'        => $path,
+                'file_size'        => Storage::disk('public')->size($path),
+                'file_type'        => 'jpg',
+                'status'           => 'Active',
+                'vehicle_id'       => $booking->vehicle->id,
+                'modified'         => Carbon::now(),
+                'mid'              => auth()->id(),
+                'created'          => Carbon::now(),
+                'cid'              => auth()->id(),
+                'label'            => $part,
+                'remarks'          => $remark,
+            ]);
+        }
+    }
+
+    // Handle pickup receipt upload
+    if ($request->hasFile('pickup_receipt')) {
+        $file = $request->file('pickup_receipt');
+
+        $filename = "pickup_receipt-{$booking_id}" . ".jpg";
+        $image = $manager->read($file)->scale(width: 800)->toJpeg(75);
+        $path = "pickup_images/pickup_receipt/{$filename}";
+        Storage::disk('public')->put($path, (string)$image);
+
+        UploadData::create([
+            'booking_trans_id' => $booking_id,
+            'position'         => 'pickup_receipt',
+            'sequence'         => NULL, 
+            'no'               => NULL,
+            'customer_id'      => $booking->customer->id,
+            'file_name'        => $filename,
+            'file_size'        => Storage::disk('public')->size($path),
+            'file_type'        => 'jpg',
+            'status'           => 'Active',
+            'vehicle_id'       => $booking->vehicle->id,
+            'modified'         => Carbon::now(),
+            'mid'              => auth()->id(),
+            'created'          => Carbon::now(),
+            'cid'              => auth()->id(),
+            'label'            => NULL,
+            'remarks'          => NULL,
+        ]);
+    }
+
+
+    return redirect()
+        ->route('reservation.view', $booking_id)
+        ->with('success', 'Pickup details successfully saved.');
+}

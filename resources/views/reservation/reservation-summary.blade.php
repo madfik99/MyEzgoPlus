@@ -667,24 +667,19 @@
                                     <input type="text" class="form-control bg-light" value="{{ number_format($rentalTotal ?? 0,2) }}" readonly>
                                 </div>
                             </div>
-                            <div class="mb-3 row">
-                                <label class="col-sm-4 col-form-label fw-bold">CDW Amount (MYR)</label>
-                                <div class="col-sm-4">
-                                    <input type="text" class="form-control bg-light" value="{{ number_format($cdwAmount ?? 0,2) }}" readonly>
-                                </div>
-                            </div>
+                            
                             <div class="mb-3 row">
                                 <label class="col-sm-4 col-form-label fw-bold">Add-ons Total (MYR)</label>
                                 <div class="col-sm-4">
                                     <input type="text" class="form-control bg-light" value="{{ number_format($addonsTotal ?? 0,2) }}" readonly>
                                 </div>
                             </div>
-                            <div class="mb-3 row">
+                            {{-- <div class="mb-3 row">
                                 <label class="col-sm-4 col-form-label fw-bold">Estimated Grand Total (MYR)</label>
                                 <div class="col-sm-4">
-                                    <input type="text" class="form-control bg-light" value="{{ number_format(($rentalTotal ?? 0) + ($cdwAmount ?? 0) + ($addonsTotal ?? 0),2) }}" readonly>
+                                    <input type="text" class="form-control bg-light" value="{{ number_format(($rentalTotal ?? 0)+ ($addonsTotal ?? 0),2) }}" readonly>
                                 </div>
-                            </div>
+                            </div> --}}
                             <div class="mb-3 row">
                                 <label class="col-sm-4 col-form-label fw-bold">Discount (MYR)</label>
                                 <div class="col-sm-4">
@@ -693,6 +688,18 @@
                             </div>
                             <div class="mb-3 row">
                                 <label class="col-sm-4 col-form-label fw-bold">Discounted Amount (MYR)</label>
+                                <div class="col-sm-4">
+                                    <input type="text" class="form-control bg-light" value="{{ number_format((($rentalTotal ?? 0) + ($addonsTotal ?? 0)) - ($discount ?? 0),2) }}" readonly>
+                                </div>
+                            </div>
+                            <div class="mb-3 row">
+                                <label class="col-sm-4 col-form-label fw-bold">CDW Amount (MYR)</label>
+                                <div class="col-sm-4">
+                                    <input type="text" class="form-control bg-light" value="+{{ number_format($cdwAmount ?? 0,2) }}" readonly>
+                                </div>
+                            </div>
+                            <div class="mb-3 row">
+                                <label class="col-sm-4 col-form-label fw-bold">Grand Total (MYR)</label>
                                 <div class="col-sm-4">
                                     <input type="text" class="form-control bg-light" value="{{ number_format((($rentalTotal ?? 0) + ($cdwAmount ?? 0) + ($addonsTotal ?? 0)) - ($discount ?? 0),2) }}" readonly>
                                 </div>

@@ -171,7 +171,7 @@
 
     {{-- OTP Verification Card --}}
     <div class="card mb-4">
-            <div class="card-header">
+            <div class="card-header">  
                 <h4>{{ $language == 'english' ? 'OTP Verification' : 'Pengesahan OTP' }}</h4>
             </div>
             <div class="card-body">

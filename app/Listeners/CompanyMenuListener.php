@@ -130,6 +130,19 @@ class CompanyMenuListener
             'order' => 30,
             'ignore_if' => [],
             'depend_on' => [],
+            'route' => 'delete.request.index',
+            'module' => $module,
+            'permission' => 'reservation manage'
+
+        ]);$menu->add([
+            'category' => 'General',
+            'title' => __('Recover Reservation Approval'),
+            'icon' => '',
+            'name' => 'Recover-reservation-approval',
+            'parent' => 'reservation',
+            'order' => 40,
+            'ignore_if' => [],
+            'depend_on' => [],
             'route' => '',
             'module' => $module,
             'permission' => 'reservation manage'
